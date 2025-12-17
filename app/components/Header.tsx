@@ -1,0 +1,62 @@
+import Link from 'next/link'
+import { navigation, siteConfig } from '../lib/constants'
+
+export default function Header() {
+	return (
+		<header className='sticky top-0 z-20 border-b border-zinc-200/80 backdrop-blur-md '>
+			{/* Left side blur effect */}
+			<div className='absolute left-0 top-0 bottom-0 w-1/4 bg-linear-to-r from-white/40 via-white/20 to-transparent' />
+			<div className='mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 md:px-8 lg:px-6 py-3 sm:py-4 relative z-10'>
+				<Link
+					href='/'
+					className='flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity'
+				>
+					{/* Brand Name */}
+					<div className='text-base sm:text-lg md:text-xl text-zinc-900 font-bold'>
+						{siteConfig.name}
+					</div>
+				</Link>
+				<nav className='hidden items-center gap-4 md:gap-6 text-xs sm:text-sm md:text-base font-medium text-zinc-600 lg:flex'>
+					{navigation.header.map(item => (
+						<Link
+							key={item.href}
+							href={item.href}
+							className='hover:text-zinc-900 transition-colors'
+						>
+							{item.label}
+						</Link>
+					))}
+				</nav>
+				<div className='flex items-center gap-2 sm:gap-3'>
+					<Link
+						href='#book'
+						className='group relative rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 text-xs sm:text-sm md:text-base font-semibold text-white shadow-lg backdrop-blur-sm overflow-hidden transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95'
+						aria-label='Book an appointment'
+					>
+						{/* Shimmer animation overlay */}
+						<span className='absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out' />
+						{/* Glow effect */}
+						<span className='absolute inset-0 rounded-lg bg-amber-400/50 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10' />
+						<span className='relative z-10 flex items-center gap-2'>
+							<svg
+								className='w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:rotate-12 duration-300'
+								fill='none'
+								stroke='currentColor'
+								viewBox='0 0 24 24'
+							>
+								<path
+									strokeLinecap='round'
+									strokeLinejoin='round'
+									strokeWidth={2}
+									d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+								/>
+							</svg>
+							<span className='hidden sm:inline'>Book appointment</span>
+							<span className='sm:hidden'>Book</span>
+						</span>
+					</Link>
+				</div>
+			</div>
+		</header>
+	)
+}
