@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { navigation, siteConfig } from '../lib/constants'
+import { navigation } from '../lib/constants'
 
 export default function Header() {
 	return (
@@ -9,14 +9,22 @@ export default function Header() {
 			<div className='mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 md:px-8 lg:px-6 py-3 sm:py-4 relative z-10'>
 				<Link
 					href='/'
-					className='flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity'
+					className='flex items-center hover:opacity-80 transition-opacity'
 				>
-					{/* Brand Name */}
-					<div className='text-base sm:text-lg md:text-xl text-zinc-900 font-bold'>
-						{siteConfig.name}
+					{/* Logo - Blond House with gold font styling */}
+					<div className='gold-font relative leading-tight text-shadow-lg'>
+						<span
+							className='block text-xl sm:text-xl md:text-2xl'
+							style={{ fontStyle: 'bold', letterSpacing: '0.04em' }}
+						>
+							BLOND HOUSE
+						</span>
 					</div>
 				</Link>
 				<nav className='hidden items-center gap-4 md:gap-6 text-xs sm:text-sm md:text-base font-medium text-zinc-600 lg:flex'>
+					<Link href='/book' className='hover:text-zinc-900 transition-colors'>
+						Book Appointment
+					</Link>
 					{navigation.header.map(item => (
 						<Link
 							key={item.href}
@@ -29,7 +37,7 @@ export default function Header() {
 				</nav>
 				<div className='flex items-center gap-2 sm:gap-3'>
 					<Link
-						href='#book'
+						href='/book'
 						className='group relative rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 text-xs sm:text-sm md:text-base font-semibold text-white shadow-lg backdrop-blur-sm overflow-hidden transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95'
 						aria-label='Book an appointment'
 					>

@@ -29,6 +29,7 @@ export const theme = {
 	},
 	typography: {
 		fontFamily: 'var(--font-plus-jakarta-sans)',
+		goldFont: 'gold-font',
 	},
 	effects: {
 		blur: {

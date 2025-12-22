@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Appointments collection
+    match /appointments/{appointmentId} {
+      // Allow anyone to read (required for public calendar to show booked slots)
+      allow read: if true;
+      
+      // Allow writes with basic validation
+      // Note: Since we're using regular Firebase SDK (not Admin SDK),
+      // even server-side operations are subject to these rules
+      // Admin authorization is enforced in server actions via requireAdmin()
+      allow create: if request.resource.data.keys().hasAll(['customerName', 'customerEmail', 'customerPhone', 'date', 'time', 'status', 'createdAt', 'updatedAt'])
+                    && request.resource.data.customerName is string
+                    && request.resource.data.customerEmail is string
+                    && request.resource.data.customerPhone is string
+                    && request.resource.data.date is string
+                    && request.resource.data.time is string
+                    && request.resource.data.status is string
+                    && request.resource.data.createdAt is string
+                    && request.resource.data.updatedAt is string;
+      
+      // Allow updates (admin can edit appointments via server actions)
+      // Admin authorization is enforced in server actions via requireAdmin()
+      allow update: if request.resource.data.keys().hasAll(['customerName', 'customerEmail', 'customerPhone', 'date', 'time', 'status', 'createdAt', 'updatedAt'])
+                    && request.resource.data.customerName is string
+                    && request.resource.data.customerEmail is string
+                    && request.resource.data.customerPhone is string
+                    && request.resource.data.date is string
+                    && request.resource.data.time is string
+                    && request.resource.data.status is string
+                    && request.resource.data.updatedAt is string;
+      
+      // Allow deletion (admin can delete appointments via server actions)
+      // Admin authorization is enforced in server actions via requireAdmin()
+      allow delete: if true;
+    }
+    
+    // Availability collection
+    match /availability/{availabilityId} {
+      // Allow anyone to read (required for public calendar to show available slots)
+      allow read: if true;
+      
+      // Allow writes with validation for new structure
+      allow create, update: if request.resource.data.keys().hasAll(['date', 'isWorkingDay', 'workingHours', 'createdAt', 'updatedAt'])
+                            && request.resource.data.date is string
+                            && request.resource.data.isWorkingDay is bool
+                            && request.resource.data.workingHours is map
+                            && request.resource.data.workingHours.keys().hasAll(['start', 'end'])
+                            && request.resource.data.workingHours.start is string
+                            && request.resource.data.workingHours.end is string
+                            && request.resource.data.createdAt is string
+                            && request.resource.data.updatedAt is string;
+      
+      // Allow deletion (for removing availability)
+      allow delete: if true;
+    }
+  }
+}
+

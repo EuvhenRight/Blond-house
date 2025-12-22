@@ -16,10 +16,9 @@ export const siteConfig = {
 
 export const navigation = {
 	header: [
-		{ label: 'Features', href: '#features' },
+		{ label: 'Services', href: '#services' },
 		{ label: 'How it works', href: '#how-it-works' },
 		{ label: 'Pricing', href: '#pricing' },
-		{ label: 'Stories', href: '#testimonials' },
 	],
 	footer: [
 		{ label: 'Privacy', href: '#' },

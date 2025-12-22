@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import './globals.css'
+import { Providers } from './providers'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
 	variable: '--font-plus-jakarta-sans',
@@ -40,9 +41,11 @@ export default function RootLayout({
 			<body
 				className={`${plusJakartaSans.variable} antialiased bg-linear-to-r from-amber-50 via-white to-amber-50 text-zinc-900 min-h-screen`}
 			>
-				<Header />
-				{children}
-				<Footer />
+				<Providers>
+					<Header />
+					{children}
+					<Footer />
+				</Providers>
 			</body>
 		</html>
 	)
