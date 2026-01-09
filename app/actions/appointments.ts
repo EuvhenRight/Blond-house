@@ -2,6 +2,7 @@
 
 import {
 	sendAdminNotificationEmail,
+	sendAppointmentChangeEmail,
 	sendBookingConfirmationEmail,
 	sendCancellationEmail,
 } from '../lib/email/resend'
@@ -10,6 +11,7 @@ import {
 	createAppointment as createAppointmentDb,
 	deleteAppointment as deleteAppointmentDb,
 	getAllAppointments,
+	getAppointmentsByDateRange as getAppointmentsByDateRangeDb,
 	getAvailability as getAvailabilityDb,
 	getAvailableTimeSlots,
 	removeAvailability as removeAvailabilityDb,
@@ -37,14 +39,21 @@ export async function createBooking(data: BookingFormData): Promise<{
 			throw new Error('Failed to retrieve created appointment')
 		}
 
-		// Send emails
-		await Promise.all([
-			sendBookingConfirmationEmail(appointment),
-			sendAdminNotificationEmail(appointment),
-		]).catch(error => {
-			// Log email errors but don't fail the booking
-			console.error('Error sending emails:', error)
-		})
+		// Send emails only if customer email is provided
+		if (appointment.customerEmail) {
+			await Promise.all([
+				sendBookingConfirmationEmail(appointment),
+				sendAdminNotificationEmail(appointment),
+			]).catch(error => {
+				// Log email errors but don't fail the booking
+				console.error('Error sending emails:', error)
+			})
+		} else {
+			// Still send admin notification even if no customer email
+			await sendAdminNotificationEmail(appointment).catch(error => {
+				console.error('Error sending admin notification email:', error)
+			})
+		}
 
 		return { success: true, appointmentId }
 	} catch (error) {
@@ -68,22 +77,76 @@ export async function getAppointments(): Promise<Appointment[]> {
 	}
 }
 
-export async function getAvailableSlots(date: string): Promise<string[]> {
+export async function getAppointmentsByDateRange(
+	startDate: string,
+	endDate: string
+): Promise<Appointment[]> {
 	try {
-		return await getAvailableTimeSlots(date)
+		await requireAdmin() // Require admin access
+		return await getAppointmentsByDateRangeDb(startDate, endDate)
+	} catch (error) {
+		console.error('Error fetching appointments by date range:', error)
+		return []
+	}
+}
+
+export async function getAvailableSlots(
+	date: string,
+	serviceDurationMinutes?: number
+): Promise<string[]> {
+	try {
+		return await getAvailableTimeSlots(date, serviceDurationMinutes)
 	} catch (error) {
 		console.error('Error fetching available slots:', error)
 		return []
 	}
 }
 
+/**
+ * Get availability for a date range (public access - for calendar display)
+ */
 export async function getAvailabilityAction(
 	startDate: string,
 	endDate: string
 ): Promise<Availability[]> {
 	try {
+		// Public read access - no admin required
+		const { getAvailability } = await import('../lib/firebase/appointments')
+		return await getAvailability(startDate, endDate)
+	} catch (error) {
+		console.error('Error fetching availability:', error)
+		return []
+	}
+}
+
+/**
+ * Get appointments for a date range (public access - for calendar display)
+ */
+export async function getAppointmentsByDateRangeAction(
+	startDate: string,
+	endDate: string
+): Promise<Appointment[]> {
+	try {
+		// Public read access - no admin required (only confirmed appointments, no sensitive data)
+		const { getAppointmentsByDateRange } = await import('../lib/firebase/appointments')
+		return await getAppointmentsByDateRange(startDate, endDate)
+	} catch (error) {
+		console.error('Error fetching appointments by date range:', error)
+		return []
+	}
+}
+
+/**
+ * Get availability for a date range (admin only - for management)
+ */
+export async function getAvailabilityAdminAction(
+	startDate: string,
+	endDate: string
+): Promise<Availability[]> {
+	try {
 		await requireAdmin() // Require admin access for managing availability
-		return await getAvailabilityDb(startDate, endDate)
+		const { getAvailability } = await import('../lib/firebase/appointments')
+		return await getAvailability(startDate, endDate)
 	} catch (error) {
 		console.error('Error fetching availability:', error)
 		return []
@@ -166,8 +229,8 @@ export async function adminCreateBooking(data: BookingFormData): Promise<{
 	try {
 		await requireAdmin() // Require admin access
 
-		// Create appointment in database
-		const appointmentId = await createAppointmentDb(data)
+		// Create appointment in database (skip availability check for admin)
+		const appointmentId = await createAppointmentDb(data, true)
 
 		// Fetch the created appointment for email
 		const allAppointments = await getAllAppointments()
@@ -208,14 +271,102 @@ export async function adminUpdateBooking(
 
 		// Get appointment before updating for email
 		const allAppointments = await getAllAppointments()
-		const appointment = allAppointments.find(apt => apt.id === appointmentId)
+		const oldAppointment = allAppointments.find(apt => apt.id === appointmentId)
 
-		if (!appointment) {
+		if (!oldAppointment) {
 			return { success: false, error: 'Appointment not found' }
+		}
+
+		// Check if date or time changed
+		const dateChanged = data.date && data.date !== oldAppointment.date
+		const timeChanged = data.time && data.time !== oldAppointment.time
+		const timeOrDateChanged = dateChanged || timeChanged
+
+		// If date or time is being changed, validate the new slot doesn't conflict with existing appointments
+		if (timeOrDateChanged && data.status !== 'cancelled') {
+			const newDate = data.date || oldAppointment.date
+			const newTime = data.time || oldAppointment.time
+			const newDuration = data.duration || oldAppointment.duration || 60
+
+			// Get all appointments for the new date (excluding the current appointment)
+			const { getAppointmentsByDate } = await import('../lib/firebase/appointments')
+			const appointmentsOnDate = await getAppointmentsByDate(newDate)
+			const otherAppointments = appointmentsOnDate.filter(apt => apt.id !== appointmentId)
+
+			// Check for overlaps using the same logic as getAvailableTimeSlots
+			const { timeToMinutes, getAvailabilityByDate } = await import('../lib/firebase/appointments')
+
+			const APPOINTMENT_BUFFER_MINUTES = 30
+			const newStartMinutes = timeToMinutes(newTime)
+			const newEndMinutes = newStartMinutes + newDuration + APPOINTMENT_BUFFER_MINUTES
+
+			// Check if new appointment overlaps with any existing appointment
+			for (const appointment of otherAppointments) {
+				if (appointment.status !== 'confirmed') continue
+
+				const appointmentStartMinutes = timeToMinutes(appointment.time)
+				const appointmentDuration = appointment.duration || 60
+				const appointmentEndWithBuffer = appointmentStartMinutes + appointmentDuration + APPOINTMENT_BUFFER_MINUTES
+
+				// Check for overlap: new appointment starts before existing ends AND new appointment ends after existing starts
+				if (newStartMinutes < appointmentEndWithBuffer && newEndMinutes > appointmentStartMinutes) {
+					return {
+						success: false,
+						error: `The selected time slot conflicts with an existing appointment at ${appointment.time}`,
+					}
+				}
+			}
+
+			// Also check if the appointment fits within working hours
+			const availability = await getAvailabilityByDate(newDate)
+			if (!availability || !availability.isWorkingDay) {
+				return {
+					success: false,
+					error: 'The selected date is not available for booking',
+				}
+			}
+
+			const hours = availability.workingHours || { start: '10:00', end: '17:00' }
+			const workingEndMinutes = timeToMinutes(hours.end)
+			if (newEndMinutes > workingEndMinutes) {
+				return {
+					success: false,
+					error: 'The appointment cannot be completed within working hours for this time slot',
+				}
+			}
 		}
 
 		// Update appointment
 		await updateAppointmentDb(appointmentId, data)
+
+		// If time or date changed and appointment is still confirmed, send notification email
+		// Only send if customer email is provided
+		if (
+			timeOrDateChanged &&
+			oldAppointment.status === 'confirmed' &&
+			oldAppointment.customerEmail
+		) {
+			// Get updated appointment for email
+			const updatedAppointments = await getAllAppointments()
+			const updatedAppointment = updatedAppointments.find(
+				apt => apt.id === appointmentId
+			)
+
+			if (
+				updatedAppointment &&
+				updatedAppointment.status === 'confirmed' &&
+				updatedAppointment.customerEmail
+			) {
+				await sendAppointmentChangeEmail(
+					updatedAppointment,
+					oldAppointment.date,
+					oldAppointment.time
+				).catch(error => {
+					// Log email errors but don't fail the update
+					console.error('Error sending appointment change email:', error)
+				})
+			}
+		}
 
 		return { success: true }
 	} catch (error) {
@@ -282,12 +433,17 @@ export async function adminCancelBooking(appointmentId: string): Promise<{
 		await cancelAppointmentDb(appointmentId)
 
 		// Send cancellation emails
-		await Promise.all([
-			sendCancellationEmail(appointment, true), // Customer
-			sendCancellationEmail(appointment, false), // Admin
-		]).catch(error => {
-			console.error('Error sending cancellation emails:', error)
-		})
+		const cancellationEmails = []
+		if (appointment.customerEmail) {
+			cancellationEmails.push(sendCancellationEmail(appointment, true)) // Customer
+		}
+		cancellationEmails.push(sendCancellationEmail(appointment, false)) // Admin
+		
+		if (cancellationEmails.length > 0) {
+			await Promise.all(cancellationEmails).catch(error => {
+				console.error('Error sending cancellation emails:', error)
+			})
+		}
 
 		return { success: true }
 	} catch (error) {

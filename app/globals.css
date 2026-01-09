@@ -1,3 +1,4 @@
+/* Tailwind CSS v4 - @apply and @theme directives are valid */
 @import 'tailwindcss';
 
 :root {
@@ -12,7 +13,7 @@
 	--color-text-secondary: rgb(82 82 91);
 	--color-text-muted: rgb(113 113 122);
 	--color-border: rgb(228 228 231);
-	
+
 	/* Gold Font Gradient */
 	--gold-gradient: linear-gradient(
 		to bottom,
@@ -44,22 +45,307 @@ body {
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
-	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15)) 
-			drop-shadow(0 0 8px rgba(251, 191, 36, 0.3))
-			drop-shadow(0 1px 2px rgba(217, 119, 6, 0.4));
+	filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15))
+		drop-shadow(0 0 8px rgba(251, 191, 36, 0.3))
+		drop-shadow(0 1px 2px rgba(217, 119, 6, 0.4));
 	text-shadow: 0 1px 2px rgba(146, 64, 14, 0.3);
 	letter-spacing: 0.02em;
 }
 
 /* FullCalendar Styles */
 .fc {
-	font-family: var(--font-plus-jakarta-sans), sans-serif;
+	@apply font-sans;
 }
 
-.fc-daygrid-day.fc-day-today {
-	background-color: rgba(251, 191, 36, 0.1) !important;
+/* Calendar grid borders - white 2px */
+.fc-daygrid-body td,
+.fc-daygrid-day,
+.fc-col-header-cell {
+	border: 2px solid white !important;
 }
 
+.fc-scrollgrid-section > table {
+	border: 2px solid white !important;
+}
+
+.fc-scrollgrid-sync-table td {
+	border: 2px solid white !important;
+}
+
+/* Style days from other months - same style as past days */
+.fc-day-other-month,
+.fc-daygrid-day.fc-day-other-month {
+	@apply cursor-not-allowed;
+}
+
+.fc-daygrid-day.fc-day-other-month .fc-daygrid-day-frame {
+	@apply bg-transparent cursor-not-allowed;
+	background-color: transparent !important;
+	opacity: 0.6 !important;
+	border: 2px solid transparent !important;
+	box-sizing: border-box !important;
+}
+
+.fc-daygrid-day.fc-day-other-month .fc-daygrid-day-number {
+	@apply text-zinc-400;
+	color: rgb(161 161 170) !important; /* zinc-400 */
+}
+
+/* Calendar header (Month Year) */
+.fc-toolbar-title {
+	@apply text-xl font-semibold text-zinc-900 mx-4;
+}
+
+/* Weekdays - clean headers */
+.fc-col-header-cell {
+	@apply text-xs font-semibold py-3 px-2 text-zinc-500 bg-transparent border-0;
+}
+
+/* Date numbers - clean styling */
+.fc-daygrid-day-number {
+	@apply text-[0.9375rem] font-medium p-2 relative;
+}
+
+.fc-daygrid-day {
+	@apply min-h-[4.5rem] border-0 bg-transparent overflow-visible;
+	box-sizing: border-box;
+	padding: 1px;
+	background-color: white;
+}
+
+.fc-daygrid-day-frame {
+	@apply min-h-[4.5rem] p-1 cursor-pointer overflow-visible;
+	box-sizing: border-box;
+}
+
+/* Past dates */
+.fc-daygrid-day.fc-day-past {
+	@apply cursor-not-allowed;
+}
+
+.fc-daygrid-day.fc-day-past .fc-daygrid-day-frame {
+	@apply bg-transparent cursor-not-allowed;
+}
+
+.fc-daygrid-day.fc-day-past .fc-daygrid-day-number {
+	@apply text-zinc-400;
+}
+
+/* Available dates - dark gray background, white text */
+.fc-daygrid-day.fc-day-available {
+	@apply bg-transparent cursor-pointer;
+}
+
+.fc-daygrid-day.fc-day-available .fc-daygrid-day-frame {
+	@apply bg-zinc-800 p-1 flex flex-col items-center justify-center cursor-pointer;
+	border-radius: 0;
+}
+
+.fc-daygrid-day.fc-day-available .fc-daygrid-day-number {
+	@apply text-white font-medium;
+}
+
+/* Label styling for available days - ensure labels are visible */
+.fc-daygrid-day.fc-day-available .text-green-600 {
+	@apply text-green-600;
+}
+
+.fc-daygrid-day.fc-day-available .bg-green-50 {
+	@apply bg-green-100;
+}
+
+.fc-daygrid-day.fc-day-available .fc-daygrid-day-top {
+	@apply hidden;
+}
+
+/* Ensure badges are visible in day cells */
+.fc-daygrid-day-frame > div {
+	@apply overflow-visible;
+}
+
+.fc-daygrid-day.fc-day-available a {
+	@apply text-white cursor-pointer;
+}
+
+/* Today when available - override with amber background */
+.fc-daygrid-day.fc-day-today.fc-day-available .fc-daygrid-day-frame {
+	@apply bg-amber-50 border-2 border-amber-500 p-1 flex flex-col items-center justify-center cursor-pointer;
+	border-radius: 0;
+	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3) !important;
+}
+
+.fc-daygrid-day.fc-day-today.fc-day-available .fc-daygrid-day-number {
+	@apply text-zinc-900 font-semibold;
+}
+
+.fc-daygrid-day.fc-day-today.fc-day-available a {
+	@apply text-zinc-900 cursor-pointer;
+}
+
+/* Selected date - red border only (Public Calendar) */
+.fc .fc-daygrid-day.fc-day-selected {
+	@apply cursor-pointer;
+}
+
+/* Selected date - red border only, must override available styles, placed AFTER available styles for specificity (Public Calendar) */
+.fc .fc-daygrid-day.fc-day-selected .fc-daygrid-day-frame {
+	border: 2px solid #ef4444 !important; /* red-500 */
+	border-radius: 0 !important;
+	position: relative !important;
+	cursor: pointer !important;
+}
+
+/* Admin Calendar - Selected date */
+.admin-calendar .fc .fc-daygrid-day.fc-admin-day-selected {
+	@apply cursor-pointer;
+}
+
+.admin-calendar
+	.fc
+	.fc-daygrid-day.fc-admin-day-selected
+	.fc-daygrid-day-frame {
+	border: 2px solid #3b82f6 !important; /* blue-500 */
+	border-radius: 0 !important;
+	position: relative !important;
+	cursor: pointer !important;
+}
+
+/* Selected date - ensure labels remain visible with red border */
+/* Label colors are handled inline in the component */
+
+/* Hide status text on mobile */
+@media (max-width: 639px) {
+	.fc-day-status-text,
+	.fc-day-not-available-text {
+		display: none !important;
+	}
+}
+
+/* Show status text on sm and up */
+@media (min-width: 640px) {
+	.fc-day-status-text,
+	.fc-day-not-available-text {
+		display: block !important;
+	}
+}
+
+/* Not available dates */
+.fc-daygrid-day.fc-day-unavailable {
+	@apply bg-transparent cursor-not-allowed;
+}
+
+.fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-frame {
+	@apply bg-transparent p-1 flex flex-col items-center justify-center cursor-not-allowed;
+}
+
+.fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-number {
+	@apply text-zinc-400 opacity-60;
+}
+
+.fc-daygrid-day.fc-day-unavailable a {
+	@apply text-zinc-400 cursor-not-allowed;
+}
+
+/* Calendar header buttons */
+.fc .fc-button {
+	@apply text-sm py-2 px-4 rounded-md font-medium text-white shadow-lg transition-all duration-300;
+	background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706) !important;
+	border: none !important;
+}
+
+.fc .fc-button:hover {
+	background: linear-gradient(to right, #f59e0b, #d97706, #b45309) !important;
+	box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3),
+		0 4px 6px -2px rgba(245, 158, 11, 0.2) !important;
+	transform: scale(1.05);
+}
+
+.fc .fc-button:active {
+	transform: scale(0.95);
+}
+
+.fc-button-group {
+	@apply rounded-md overflow-hidden;
+}
+
+/* Today button */
+.fc .fc-today-button {
+	@apply text-sm py-2 px-4 rounded-md font-medium text-white shadow-lg transition-all duration-300;
+	background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706) !important;
+	border: none !important;
+}
+
+.fc .fc-today-button:hover {
+	background: linear-gradient(to right, #f59e0b, #d97706, #b45309) !important;
+	box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3),
+		0 4px 6px -2px rgba(245, 158, 11, 0.2) !important;
+	transform: scale(1.05);
+}
+
+.fc .fc-today-button:active {
+	transform: scale(0.95);
+}
+
+/* Navigation buttons */
+.fc .fc-prev-button,
+.fc .fc-next-button {
+	@apply py-2 px-3 text-white shadow-lg transition-all duration-300;
+	background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706) !important;
+	border: none !important;
+}
+
+.fc .fc-prev-button:hover,
+.fc .fc-next-button:hover {
+	background: linear-gradient(to right, #f59e0b, #d97706, #b45309) !important;
+	box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3),
+		0 4px 6px -2px rgba(245, 158, 11, 0.2) !important;
+	transform: scale(1.05);
+}
+
+.fc .fc-prev-button:active,
+.fc .fc-next-button:active {
+	transform: scale(0.95);
+}
+
+/* Today indicator - border and background for all today dates (only if not selected and not available) */
+.fc-daygrid-day.fc-day-today:not(.fc-day-selected):not(.fc-day-available)
+	.fc-daygrid-day-frame {
+	@apply bg-amber-50 border-2 border-amber-400 p-1 flex flex-col items-center justify-center cursor-pointer;
+	border-radius: 0;
+	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3) !important;
+}
+
+.fc-daygrid-day.fc-day-today:not(.fc-day-selected):not(.fc-day-available)
+	.fc-daygrid-day-number {
+	@apply text-zinc-900 font-semibold;
+}
+
+/* Admin Calendar - Today when selected */
+.admin-calendar
+	.fc-daygrid-day.fc-day-today.fc-admin-day-selected
+	.fc-daygrid-day-frame {
+	border: 2px solid #3b82f6 !important; /* blue-500, 2px */
+	border-radius: 0 !important;
+	position: relative !important;
+	cursor: pointer !important;
+}
+
+/* Today when unavailable - make it clickable with subtle styling */
+.fc-daygrid-day.fc-day-today.fc-day-unavailable .fc-daygrid-day-frame {
+	@apply bg-amber-50 border-2 border-amber-300 p-1 flex flex-col items-center justify-center cursor-pointer;
+	border-radius: 0;
+	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2) !important;
+}
+
+.fc-daygrid-day.fc-day-today.fc-day-unavailable .fc-daygrid-day-number {
+	@apply text-zinc-700 font-semibold;
+}
+
+.fc-daygrid-day.fc-day-today.fc-day-unavailable a {
+	@apply text-zinc-700 cursor-pointer;
+}
+
+/* Button active state */
 .fc-button-primary {
 	background-color: #f59e0b !important;
 	border-color: #d97706 !important;
@@ -72,4 +358,53 @@ body {
 
 .fc-event {
 	border-color: #d97706 !important;
+}
+
+.fc-toolbar-chunk:first-child {
+	@apply flex items-center gap-2;
+}
+
+.fc-toolbar-chunk:last-child {
+	@apply hidden;
+}
+
+/* ============================================
+   Admin Calendar Styles
+   ============================================ */
+
+/* Override public calendar styles for admin calendar */
+.admin-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-frame {
+	/* Admin calendar uses background events, so we don't need the dark gray background */
+	@apply bg-transparent;
+}
+
+.admin-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-number {
+	/* Admin calendar uses background events, so we don't need white text */
+	@apply text-zinc-900;
+}
+
+.admin-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-frame {
+	/* Admin calendar uses background events, so we don't need transparent background styling */
+	@apply bg-transparent;
+}
+
+.admin-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-number {
+	/* Admin calendar uses background events, so we don't need the muted styling */
+	@apply text-zinc-900;
+}
+
+/* Admin Calendar - Today indicator (doesn't need the same amber styling as public) */
+.admin-calendar
+	.fc-daygrid-day.fc-day-today:not(.fc-admin-day-selected)
+	.fc-daygrid-day-frame {
+	@apply border-2 border-amber-400;
+	border-radius: 0 !important;
+}
+
+/* Ensure admin calendar selected date uses blue border */
+.admin-calendar .fc-daygrid-day.fc-admin-day-selected .fc-daygrid-day-frame {
+	border: 2px solid #3b82f6 !important; /* blue-500 */
+	border-radius: 0 !important;
+	background-color: #eff6ff !important; /* blue-50 */
+	cursor: pointer !important;
 }

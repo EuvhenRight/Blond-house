@@ -17,6 +17,9 @@ import type { Appointment, Availability, BookingFormData } from '../types'
 const APPOINTMENTS_COLLECTION = 'appointments'
 const AVAILABILITY_COLLECTION = 'availability'
 
+// Buffer time between appointments (30 minutes for preparation/cleanup)
+const APPOINTMENT_BUFFER_MINUTES = 30
+
 /**
  * Get all appointments
  */
@@ -52,6 +55,39 @@ export async function getAppointmentsByDate(
 		})) as Appointment[]
 	} catch (error) {
 		console.error('Error fetching appointments by date:', error)
+		throw error
+	}
+}
+
+/**
+ * Get appointments for a date range (for calendar display)
+ * 
+ * This function queries by date range and filters by status in memory
+ * to avoid requiring a Firestore composite index.
+ */
+export async function getAppointmentsByDateRange(
+	startDate: string,
+	endDate: string
+): Promise<Appointment[]> {
+	try {
+		// Query by date range only (no index required for range queries on single field)
+		const q = query(
+			collection(db, APPOINTMENTS_COLLECTION),
+			where('date', '>=', startDate),
+			where('date', '<=', endDate)
+		)
+		const snapshot = await getDocs(q)
+		
+		// Filter by status in memory (confirmed appointments only)
+		const appointments = snapshot.docs
+			.map((doc) => ({
+				id: doc.id,
+				...doc.data(),
+			})) as Appointment[]
+		
+		return appointments.filter((apt) => apt.status === 'confirmed')
+	} catch (error) {
+		console.error('Error fetching appointments by date range:', error)
 		throw error
 	}
 }
@@ -107,35 +143,59 @@ export async function getAvailabilityByDate(
 
 /**
  * Create a new appointment (with race condition protection)
+ * @param data Booking form data
+ * @param skipAvailabilityCheck If true, skip availability validation (for admin overrides)
  */
 export async function createAppointment(
-	data: BookingFormData
+	data: BookingFormData,
+	skipAvailabilityCheck: boolean = false
 ): Promise<string> {
 	try {
 		// Use a batch to ensure atomicity
 		const batch = writeBatch(db)
 
-		// Check if day is a working day and slot is available
-		const availability = await getAvailabilityByDate(data.date)
-		if (!availability || !availability.isWorkingDay) {
-			throw new Error('This date is not available for booking')
-		}
+		// Only validate availability for public bookings
+		if (!skipAvailabilityCheck) {
+			// Check if day is a working day and slot is available
+			const availability = await getAvailabilityByDate(data.date)
+			if (!availability || !availability.isWorkingDay) {
+				throw new Error('This date is not available for booking')
+			}
 
-		// Get available time slots for validation
-		const availableSlots = await getAvailableTimeSlots(data.date)
-		if (!availableSlots.includes(data.time)) {
-			throw new Error('Time slot is no longer available')
+			// Get available time slots for validation (check with service duration)
+			const serviceDuration = data.duration || undefined
+			const availableSlots = await getAvailableTimeSlots(data.date, serviceDuration)
+			if (!availableSlots.includes(data.time)) {
+				throw new Error('Time slot is no longer available or there is not enough time for this service')
+			}
+
+			// Additional check: verify service can be completed within working hours (including buffer)
+			if (serviceDuration) {
+				const hours = availability.workingHours || { start: '10:00', end: '17:00' }
+				const workingEndMinutes = timeToMinutes(hours.end)
+				const appointmentStartMinutes = timeToMinutes(data.time)
+				// Service needs: duration + buffer time to complete
+				const appointmentEndMinutes = appointmentStartMinutes + serviceDuration + APPOINTMENT_BUFFER_MINUTES
+				
+				if (appointmentEndMinutes > workingEndMinutes) {
+					throw new Error('Service cannot be completed within working hours for this time slot')
+				}
+			}
 		}
 
 		// Create appointment
 		const appointmentRef = doc(collection(db, APPOINTMENTS_COLLECTION))
 		const now = new Date().toISOString()
+		// Always include optional fields (set to null if not provided) for Firestore rules validation
 		const appointment: Omit<Appointment, 'id'> = {
 			customerName: data.customerName,
-			customerEmail: data.customerEmail,
-			customerPhone: data.customerPhone,
+			customerEmail: data.customerEmail || null,
+			customerPhone: data.customerPhone || null,
 			date: data.date,
 			time: data.time,
+			...(data.serviceId && { serviceId: data.serviceId }),
+			...(data.serviceName && { serviceName: data.serviceName }),
+			...(data.duration && { duration: data.duration }),
 			status: 'confirmed',
 			createdAt: now,
 			updatedAt: now,
@@ -202,9 +262,23 @@ export async function updateAppointment(
 			updatedAt: new Date().toISOString(),
 		}
 
-		if (data.customerName) updateData.customerName = data.customerName
-		if (data.customerEmail) updateData.customerEmail = data.customerEmail
-		if (data.customerPhone) updateData.customerPhone = data.customerPhone
+		if (data.customerName !== undefined) updateData.customerName = data.customerName
+		// Always include optional fields (set to null if explicitly set to undefined/empty)
+		if (data.customerEmail !== undefined) {
+			updateData.customerEmail = data.customerEmail || null
+		}
+		if (data.customerPhone !== undefined) {
+			updateData.customerPhone = data.customerPhone || null
+		}
+		if (data.serviceId !== undefined) {
+			updateData.serviceId = data.serviceId || null
+		}
+		if (data.serviceName !== undefined) {
+			updateData.serviceName = data.serviceName || null
+		}
+		if (data.duration !== undefined) {
+			updateData.duration = data.duration || null
+		}
 		if (data.date) updateData.date = data.date
 		if (data.time) updateData.time = data.time
 		if (data.status) updateData.status = data.status
@@ -236,12 +310,12 @@ export async function deleteAppointment(appointmentId: string): Promise<void> {
 }
 
 /**
- * Generate time slots from working hours (default 1-hour intervals)
+ * Generate time slots from working hours (default 30-minute intervals)
  */
 export function generateTimeSlots(
 	startTime: string,
 	endTime: string,
-	intervalMinutes: number = 60
+	intervalMinutes: number = 30
 ): string[] {
 	const slots: string[] = []
 	const [startHour, startMin] = startTime.split(':').map(Number)
@@ -261,6 +335,14 @@ export function generateTimeSlots(
 }
 
 /**
+ * Convert time string (HH:MM) to minutes
+ */
+export function timeToMinutes(time: string): number {
+	const [hours, minutes] = time.split(':').map(Number)
+	return hours * 60 + minutes
+}
+
+/**
  * Set working day status and hours for a date
  */
 export async function setWorkingDay(
@@ -270,6 +352,18 @@ export async function setWorkingDay(
 	customTimeSlots?: string[]
 ): Promise<void> {
 	try {
+		// If trying to set as non-working, validate no appointments exist
+		if (!isWorkingDay) {
+			const appointments = await getAppointmentsByDate(date)
+			// getAppointmentsByDate already returns only confirmed appointments
+			
+			if (appointments.length > 0) {
+				throw new Error(
+					`Cannot close this day. There ${appointments.length === 1 ? 'is' : 'are'} ${appointments.length} confirmed appointment${appointments.length === 1 ? '' : 's'}. Please cancel or reschedule appointments first.`
+				)
+			}
+		}
+
 		const availability = await getAvailabilityByDate(date)
 		const now = new Date().toISOString()
 
@@ -325,9 +419,20 @@ export async function setAvailability(
 
 /**
  * Remove availability for a date (sets isWorkingDay to false or deletes record)
+ * Validates that the day has no appointments before closing it
  */
 export async function removeAvailability(date: string): Promise<void> {
 	try {
+		// Check if there are any confirmed appointments for this date
+		const appointments = await getAppointmentsByDate(date)
+		// getAppointmentsByDate already returns only confirmed appointments
+		
+		if (appointments.length > 0) {
+			throw new Error(
+				`Cannot close this day. There ${appointments.length === 1 ? 'is' : 'are'} ${appointments.length} confirmed appointment${appointments.length === 1 ? '' : 's'}. Please cancel or reschedule appointments first.`
+			)
+		}
+
 		const availability = await getAvailabilityByDate(date)
 		if (availability && availability.id) {
 			// Instead of deleting, set isWorkingDay to false
@@ -342,7 +447,10 @@ export async function removeAvailability(date: string): Promise<void> {
 /**
  * Get available time slots for a date (excluding booked ones)
  */
-export async function getAvailableTimeSlots(date: string): Promise<string[]> {
+export async function getAvailableTimeSlots(
+	date: string,
+	serviceDurationMinutes?: number
+): Promise<string[]> {
 	try {
 		const availability = await getAvailabilityByDate(date)
 		
@@ -351,24 +459,68 @@ export async function getAvailableTimeSlots(date: string): Promise<string[]> {
 			return []
 		}
 
-		// Get booked appointments
+		// Get working hours
+		const hours = availability.workingHours || { start: '10:00', end: '17:00' }
+		const workingStartMinutes = timeToMinutes(hours.start)
+		const workingEndMinutes = timeToMinutes(hours.end)
+
+		// Get booked appointments with their durations
 		const appointments = await getAppointmentsByDate(date)
-		const bookedTimes = appointments
+		const bookedAppointments = appointments
 			.filter((apt) => apt.status === 'confirmed')
-			.map((apt) => apt.time)
+			.map((apt) => ({
+				time: apt.time,
+				duration: apt.duration || 60, // Default to 60 minutes if not specified
+			}))
 
 		// Use customTimeSlots if available, otherwise generate from workingHours
 		let timeSlots: string[]
 		if (availability.customTimeSlots && availability.customTimeSlots.length > 0) {
 			timeSlots = availability.customTimeSlots
 		} else {
-			// Generate slots from working hours (default: 10:00-17:00)
-			const hours = availability.workingHours || { start: '10:00', end: '17:00' }
-			timeSlots = generateTimeSlots(hours.start, hours.end)
+			// Generate slots from working hours (default: 10:00-17:00) with 30-minute intervals
+			timeSlots = generateTimeSlots(hours.start, hours.end, 30)
 		}
 
-		// Filter out booked slots
-		return timeSlots.filter((slot) => !bookedTimes.includes(slot))
+		// Use service duration for overlap checking, default to 60 minutes if not provided
+		const slotDurationForOverlap = serviceDurationMinutes || 60
+
+		// First, filter out slots that don't have enough time remaining before working hours end
+		// Even for the minimum service (30 min) + buffer (30 min), we need 60 minutes
+		let availableSlots = timeSlots.filter((slot) => {
+			const slotMinutes = timeToMinutes(slot)
+			// Use the actual service duration if provided, otherwise use minimum
+			const requiredDuration = serviceDurationMinutes || 30
+			const slotEndMinutes = slotMinutes + requiredDuration + APPOINTMENT_BUFFER_MINUTES
+			// Check if service can be completed (including buffer) before working hours end
+			return slotEndMinutes <= workingEndMinutes
+		})
+
+		// Then filter out slots that overlap with booked appointments based on duration
+		// Account for buffer time: existing appointments block until (end + buffer)
+		// and new appointments need (duration + buffer) time
+		availableSlots = availableSlots.filter((slot) => {
+			const slotMinutes = timeToMinutes(slot)
+			// New appointment needs: service duration + buffer time
+			const slotEndMinutes = slotMinutes + slotDurationForOverlap + APPOINTMENT_BUFFER_MINUTES
+			
+			// Check if this slot overlaps with any booked appointment
+			for (const appointment of bookedAppointments) {
+				const appointmentStartMinutes = timeToMinutes(appointment.time)
+				// Existing appointment blocks until: duration + buffer time
+				const appointmentEndWithBuffer = appointmentStartMinutes + appointment.duration + APPOINTMENT_BUFFER_MINUTES
+				
+				// Slot overlaps if:
+				// Slot starts before appointment ends (with buffer) AND slot ends (with buffer) after appointment starts
+				if (slotMinutes < appointmentEndWithBuffer && slotEndMinutes > appointmentStartMinutes) {
+					return false // This slot overlaps with a booked appointment
+				}
+			}
+			
+			return true // No overlap, slot is available
+		})
+
+		return availableSlots
 	} catch (error) {
 		console.error('Error getting available time slots:', error)
 		throw error

@@ -5,10 +5,13 @@
 export interface Appointment {
 	id?: string
 	customerName: string
-	customerEmail: string
-	customerPhone: string
+	customerEmail?: string | null // Optional: for blocking time slots without customer info
+	customerPhone?: string | null // Optional: for blocking time slots without customer info
 	date: string // ISO date string (YYYY-MM-DD)
 	time: string // Time string (HH:MM)
+	serviceId?: string // Service identifier
+	serviceName?: string // Service name for display
+	duration?: number // Duration in minutes
 	status: 'confirmed' | 'cancelled'
 	createdAt: string // ISO timestamp
 	updatedAt: string // ISO timestamp
@@ -35,9 +38,12 @@ export interface TimeSlot {
 
 export interface BookingFormData {
 	customerName: string
-	customerEmail: string
-	customerPhone: string
+	customerEmail?: string // Optional: admin can block time slots without customer
+	customerPhone?: string // Optional: admin can block time slots without customer
 	date: string
 	time: string
+	serviceId?: string // Service identifier
+	serviceName?: string // Service name
+	duration?: number // Duration in minutes
 }
 

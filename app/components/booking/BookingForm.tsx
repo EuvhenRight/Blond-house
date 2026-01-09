@@ -3,18 +3,35 @@
 import { FormEvent, useEffect, useState } from 'react'
 import { createBooking } from '../../actions/appointments'
 import type { BookingFormData } from '../../lib/types'
+import { services, getServiceById, formatDuration } from '../../lib/services'
+import { bookingFormSchema, type BookingFormInput } from '../../lib/validation'
+import { ZodError } from 'zod'
 
 interface BookingFormProps {
 	selectedDate: string | null
 	selectedTime: string | null
+	selectedServiceId?: string | null
 	onBookingSuccess: () => void
+}
+
+interface FieldErrors {
+	customerName?: string
+	customerEmail?: string
+	customerPhone?: string
+	serviceId?: string
+	date?: string
+	time?: string
 }
 
 export default function BookingForm({
 	selectedDate,
 	selectedTime,
+	selectedServiceId,
 	onBookingSuccess,
 }: BookingFormProps) {
+	const [selectedService, setSelectedService] = useState<string>(
+		selectedServiceId || ''
+	)
 	const [formData, setFormData] = useState<BookingFormData>({
 		customerName: '',
 		customerEmail: '',
@@ -25,22 +42,80 @@ export default function BookingForm({
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [success, setSuccess] = useState(false)
+	const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+
+	// Update form data when service is selected
+	useEffect(() => {
+		if (selectedService) {
+			const service = getServiceById(selectedService)
+			if (service) {
+				setFormData(prev => ({
+					...prev,
+					serviceId: service.id,
+					serviceName: service.name,
+					duration: service.duration,
+				}))
+			}
+		}
+		// Clear service error when service is selected
+		if (selectedService && fieldErrors.serviceId) {
+			setFieldErrors(prev => ({ ...prev, serviceId: undefined }))
+		}
+	}, [selectedService])
 
 	useEffect(() => {
-		if (selectedDate) setFormData(prev => ({ ...prev, date: selectedDate }))
-		if (selectedTime) setFormData(prev => ({ ...prev, time: selectedTime }))
+		if (selectedDate) {
+			setFormData(prev => ({ ...prev, date: selectedDate }))
+			if (fieldErrors.date) {
+				setFieldErrors(prev => ({ ...prev, date: undefined }))
+			}
+		}
+		if (selectedTime) {
+			setFormData(prev => ({ ...prev, time: selectedTime }))
+			if (fieldErrors.time) {
+				setFieldErrors(prev => ({ ...prev, time: undefined }))
+			}
+		}
 	}, [selectedDate, selectedTime])
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setError(null)
+		setFieldErrors({})
 		setIsSubmitting(true)
 
 		try {
-			const result = await createBooking(formData)
+			// Validate with Zod
+			const validationData: BookingFormInput = {
+				customerName: formData.customerName || '',
+				customerEmail: formData.customerEmail || '',
+				customerPhone: formData.customerPhone || '',
+				serviceId: selectedService || '',
+				date: formData.date || '',
+				time: formData.time || '',
+				serviceName: formData.serviceName,
+				duration: formData.duration,
+			}
+			
+			const validatedData = bookingFormSchema.parse(validationData)
+
+			// Prepare form data with validated values
+			const submitData: BookingFormData = {
+				customerName: validatedData.customerName,
+				customerEmail: validatedData.customerEmail,
+				customerPhone: validatedData.customerPhone,
+				serviceId: validatedData.serviceId,
+				serviceName: validatedData.serviceName,
+				duration: validatedData.duration,
+				date: validatedData.date,
+				time: validatedData.time,
+			}
+
+			const result = await createBooking(submitData)
 
 			if (result.success) {
 				setSuccess(true)
+				setSelectedService('')
 				setFormData({
 					customerName: '',
 					customerEmail: '',
@@ -48,6 +123,7 @@ export default function BookingForm({
 					date: '',
 					time: '',
 				})
+				setFieldErrors({})
 				setTimeout(() => {
 					setSuccess(false)
 					onBookingSuccess()
@@ -56,7 +132,19 @@ export default function BookingForm({
 				setError(result.error || 'Failed to create booking')
 			}
 		} catch (err) {
-			setError(err instanceof Error ? err.message : 'An error occurred')
+			if (err instanceof ZodError) {
+				// Handle Zod validation errors
+				const errors: FieldErrors = {}
+				err.issues.forEach((issue) => {
+					if (issue.path[0]) {
+						const field = issue.path[0] as keyof FieldErrors
+						errors[field] = issue.message
+					}
+				})
+				setFieldErrors(errors)
+			} else {
+				setError(err instanceof Error ? err.message : 'An error occurred')
+			}
 		} finally {
 			setIsSubmitting(false)
 		}
@@ -100,7 +188,7 @@ export default function BookingForm({
 	}
 
 	return (
-		<form onSubmit={handleSubmit} className='space-y-6'>
+		<form onSubmit={handleSubmit} className='space-y-6' noValidate>
 			<div className='bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6'>
 				<h3 className='font-semibold text-zinc-900 mb-2'>
 					Selected Appointment
@@ -117,6 +205,14 @@ export default function BookingForm({
 				<p className='text-sm text-zinc-700'>
 					<strong>Time:</strong> {selectedTime}
 				</p>
+				{selectedService && getServiceById(selectedService) && (
+					<p className='text-sm text-zinc-700 mt-2'>
+						<strong>Service:</strong> {getServiceById(selectedService)?.name}
+						<br />
+						<strong>Duration:</strong>{' '}
+						{formatDuration(getServiceById(selectedService)?.duration || 0)}
+					</p>
+				)}
 			</div>
 
 			{error && (
@@ -124,6 +220,45 @@ export default function BookingForm({
 					{error}
 				</div>
 			)}
+
+			<div>
+				<label
+					htmlFor='service'
+					className='block text-sm font-medium text-zinc-700 mb-2'
+				>
+					Service *
+				</label>
+				<select
+					id='service'
+					value={selectedService}
+					onChange={e => {
+						setSelectedService(e.target.value)
+						if (fieldErrors.serviceId) {
+							setFieldErrors(prev => ({ ...prev, serviceId: undefined }))
+						}
+					}}
+					className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+						fieldErrors.serviceId
+							? 'border-red-500 focus:ring-red-500'
+							: 'border-zinc-300'
+					}`}
+				>
+					<option value=''>Select a service</option>
+					{services.map(service => (
+						<option key={service.id} value={service.id}>
+							{service.name} - {service.price} ({formatDuration(service.duration)})
+						</option>
+					))}
+				</select>
+				{fieldErrors.serviceId && (
+					<p className='mt-1 text-sm text-red-600'>{fieldErrors.serviceId}</p>
+				)}
+				{selectedService && !fieldErrors.serviceId && (
+					<p className='mt-2 text-sm text-zinc-600'>
+						{getServiceById(selectedService)?.description}
+					</p>
+				)}
+			</div>
 
 			<div>
 				<label
@@ -135,14 +270,23 @@ export default function BookingForm({
 				<input
 					type='text'
 					id='customerName'
-					required
 					value={formData.customerName}
-					onChange={e =>
+					onChange={e => {
 						setFormData({ ...formData, customerName: e.target.value })
-					}
-					className='w-full px-4 py-3 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+						if (fieldErrors.customerName) {
+							setFieldErrors(prev => ({ ...prev, customerName: undefined }))
+						}
+					}}
+					className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+						fieldErrors.customerName
+							? 'border-red-500 focus:ring-red-500'
+							: 'border-zinc-300'
+					}`}
 					placeholder='John Doe'
 				/>
+				{fieldErrors.customerName && (
+					<p className='mt-1 text-sm text-red-600'>{fieldErrors.customerName}</p>
+				)}
 			</div>
 
 			<div>
@@ -155,14 +299,23 @@ export default function BookingForm({
 				<input
 					type='email'
 					id='customerEmail'
-					required
 					value={formData.customerEmail}
-					onChange={e =>
+					onChange={e => {
 						setFormData({ ...formData, customerEmail: e.target.value })
-					}
-					className='w-full px-4 py-3 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+						if (fieldErrors.customerEmail) {
+							setFieldErrors(prev => ({ ...prev, customerEmail: undefined }))
+						}
+					}}
+					className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+						fieldErrors.customerEmail
+							? 'border-red-500 focus:ring-red-500'
+							: 'border-zinc-300'
+					}`}
 					placeholder='john@example.com'
 				/>
+				{fieldErrors.customerEmail && (
+					<p className='mt-1 text-sm text-red-600'>{fieldErrors.customerEmail}</p>
+				)}
 			</div>
 
 			<div>
@@ -175,23 +328,44 @@ export default function BookingForm({
 				<input
 					type='tel'
 					id='customerPhone'
-					required
 					value={formData.customerPhone}
-					onChange={e =>
+					onChange={e => {
 						setFormData({ ...formData, customerPhone: e.target.value })
-					}
-					className='w-full px-4 py-3 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+						if (fieldErrors.customerPhone) {
+							setFieldErrors(prev => ({ ...prev, customerPhone: undefined }))
+						}
+					}}
+					className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+						fieldErrors.customerPhone
+							? 'border-red-500 focus:ring-red-500'
+							: 'border-zinc-300'
+					}`}
 					placeholder='+31 6 12345678'
 				/>
+				{fieldErrors.customerPhone && (
+					<p className='mt-1 text-sm text-red-600'>{fieldErrors.customerPhone}</p>
+				)}
 			</div>
 
 			<button
 				type='submit'
-				disabled={isSubmitting}
-				className='w-full rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+				disabled={isSubmitting || !selectedService}
+				className='group relative w-full overflow-hidden rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg'
 			>
-				{isSubmitting ? 'Booking...' : 'Confirm Booking'}
+				{/* Shimmer animation overlay */}
+				<span className='absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out' />
+				{/* Glow effect */}
+				<span className='absolute inset-0 rounded-lg bg-amber-400/50 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10' />
+				<span className='relative z-10'>
+					{isSubmitting ? 'Booking...' : 'Confirm Booking'}
+				</span>
 			</button>
+			
+			<p className='text-xs text-zinc-500 text-center mt-4'>
+				* Additional charges may apply for certain services—please consult with your stylist.
+				<br />
+				* All services include shampoo, styling, and blow-dry in the desired direction.
+			</p>
 		</form>
 	)
 }

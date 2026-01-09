@@ -3,20 +3,32 @@
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useState } from 'react'
+import { loginSchema } from '../../lib/validation'
+import { ZodError } from 'zod'
+
+interface FieldErrors {
+	email?: string
+	password?: string
+}
 
 export default function AdminLoginPage() {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState<string | null>(null)
+	const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 	const [isLoading, setIsLoading] = useState(false)
 	const router = useRouter()
 
 	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		setError(null)
+		setFieldErrors({})
 		setIsLoading(true)
 
 		try {
+			// Validate with Zod
+			loginSchema.parse({ email, password })
+
 			const result = await signIn('credentials', {
 				email,
 				password,
@@ -29,8 +41,20 @@ export default function AdminLoginPage() {
 				router.push('/admin/dashboard')
 				router.refresh()
 			}
-		} catch {
-			setError('An error occurred. Please try again.')
+		} catch (err) {
+			if (err instanceof ZodError) {
+				// Handle Zod validation errors
+				const errors: FieldErrors = {}
+				err.issues.forEach((issue) => {
+					if (issue.path[0]) {
+						const field = issue.path[0] as keyof FieldErrors
+						errors[field] = issue.message
+					}
+				})
+				setFieldErrors(errors)
+			} else {
+				setError('An error occurred. Please try again.')
+			}
 		} finally {
 			setIsLoading(false)
 		}
@@ -63,10 +87,22 @@ export default function AdminLoginPage() {
 							id='email'
 							required
 							value={email}
-							onChange={e => setEmail(e.target.value)}
-							className='w-full px-4 py-3 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+							onChange={e => {
+								setEmail(e.target.value)
+								if (fieldErrors.email) {
+									setFieldErrors(prev => ({ ...prev, email: undefined }))
+								}
+							}}
+							className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+								fieldErrors.email
+									? 'border-red-500 focus:ring-red-500'
+									: 'border-zinc-300'
+							}`}
 							placeholder='admin@blondhouse.com'
 						/>
+						{fieldErrors.email && (
+							<p className='mt-1 text-sm text-red-600'>{fieldErrors.email}</p>
+						)}
 					</div>
 
 					<div>
@@ -81,18 +117,36 @@ export default function AdminLoginPage() {
 							id='password'
 							required
 							value={password}
-							onChange={e => setPassword(e.target.value)}
-							className='w-full px-4 py-3 border border-zinc-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent'
+							onChange={e => {
+								setPassword(e.target.value)
+								if (fieldErrors.password) {
+									setFieldErrors(prev => ({ ...prev, password: undefined }))
+								}
+							}}
+							className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent ${
+								fieldErrors.password
+									? 'border-red-500 focus:ring-red-500'
+									: 'border-zinc-300'
+							}`}
 							placeholder='••••••••'
 						/>
+						{fieldErrors.password && (
+							<p className='mt-1 text-sm text-red-600'>{fieldErrors.password}</p>
+						)}
 					</div>
 
 					<button
 						type='submit'
 						disabled={isLoading}
-						className='w-full rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed'
+						className='group relative w-full overflow-hidden rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg'
 					>
-						{isLoading ? 'Signing in...' : 'Sign In'}
+						{/* Shimmer animation overlay */}
+						<span className='absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out' />
+						{/* Glow effect */}
+						<span className='absolute inset-0 rounded-lg bg-amber-400/50 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10' />
+						<span className='relative z-10'>
+							{isLoading ? 'Signing in...' : 'Sign In'}
+						</span>
 					</button>
 				</form>
 			</div>

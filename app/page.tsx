@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { FiMapPin } from 'react-icons/fi'
 import { ImWhatsapp } from 'react-icons/im'
 import { siteConfig } from './lib/constants'
+import Services from './components/Services'
 
 export default function Home() {
 	const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -136,142 +137,7 @@ export default function Home() {
 						</div>
 
 						{/* Services Grid */}
-						<div className='grid gap-6 sm:gap-8 md:grid-cols-3'>
-							{/* Service 1 - Haircut */}
-							<div className='group relative bg-white/95 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105'>
-								<div className='mb-4'>
-									<div className='inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber-100 mb-4'>
-										<svg
-											className='w-6 h-6 sm:w-7 sm:h-7 text-amber-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'
-											/>
-										</svg>
-									</div>
-									<h3 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-3'>
-										Haircut & Styling
-									</h3>
-									<p className='text-zinc-600 leading-relaxed mb-4'>
-										Expert precision cuts and modern styling techniques to
-										transform your look with balance and flow.
-									</p>
-									<ul className='space-y-2 text-sm text-zinc-500 mb-6'>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Consultation included</span>
-										</li>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Premium products</span>
-										</li>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Styling finish</span>
-										</li>
-									</ul>
-									<button className='w-full rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95'>
-										Book Now
-									</button>
-								</div>
-							</div>
-
-							{/* Service 2 - Color */}
-							<div className='group relative bg-white/95 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105'>
-								<div className='mb-4'>
-									<div className='inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber-100 mb-4'>
-										<svg
-											className='w-6 h-6 sm:w-7 sm:h-7 text-amber-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01'
-											/>
-										</svg>
-									</div>
-									<h3 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-3'>
-										Color & Highlights
-									</h3>
-									<p className='text-zinc-600 leading-relaxed mb-4'>
-										Custom color treatments and highlights designed to enhance
-										your natural beauty with precision and care.
-									</p>
-									<ul className='space-y-2 text-sm text-zinc-500 mb-6'>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Color consultation</span>
-										</li>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Premium color products</span>
-										</li>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Deep conditioning</span>
-										</li>
-									</ul>
-									<button className='w-full rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95'>
-										Book Now
-									</button>
-								</div>
-							</div>
-
-							{/* Service 3 - Treatment */}
-							<div className='group relative bg-white/95 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105'>
-								<div className='mb-4'>
-									<div className='inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber-100 mb-4'>
-										<svg
-											className='w-6 h-6 sm:w-7 sm:h-7 text-amber-600'
-											fill='none'
-											stroke='currentColor'
-											viewBox='0 0 24 24'
-										>
-											<path
-												strokeLinecap='round'
-												strokeLinejoin='round'
-												strokeWidth={2}
-												d='M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z'
-											/>
-										</svg>
-									</div>
-									<h3 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-3'>
-										Hair Treatments
-									</h3>
-									<p className='text-zinc-600 leading-relaxed mb-4'>
-										Restorative treatments to nourish, repair, and revitalize
-										your hair for optimal health and shine.
-									</p>
-									<ul className='space-y-2 text-sm text-zinc-500 mb-6'>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Deep conditioning</span>
-										</li>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Hair repair treatment</span>
-										</li>
-										<li className='flex items-center gap-2'>
-											<span className='text-amber-600'>•</span>
-											<span>Scalp treatment</span>
-										</li>
-									</ul>
-									<button className='w-full rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95'>
-										Book Now
-									</button>
-								</div>
-							</div>
-						</div>
+						<Services showNotes={true} gridCols='4' />
 					</div>
 				</section>
 

@@ -1,5 +1,9 @@
-import { initializeApp, getApps, FirebaseApp } from 'firebase/app'
-import { getFirestore, Firestore } from 'firebase/firestore'
+import { FirebaseApp, getApps, initializeApp } from 'firebase/app'
+import { Firestore, getFirestore } from 'firebase/firestore'
+import { suppressFirebaseWarnings } from './suppress-warnings'
+
+// Suppress harmless Firebase connection warnings in development
+suppressFirebaseWarnings()
 
 const firebaseConfig = {
 	apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -31,5 +35,4 @@ if (typeof window !== 'undefined') {
 	db = getFirestore(app)
 }
 
-export { db, app }
-
+export { app, db }

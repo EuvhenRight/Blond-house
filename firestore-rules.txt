@@ -10,26 +10,35 @@ service cloud.firestore {
       // Note: Since we're using regular Firebase SDK (not Admin SDK),
       // even server-side operations are subject to these rules
       // Admin authorization is enforced in server actions via requireAdmin()
+      // customerEmail, customerPhone, serviceId, serviceName, duration are optional
       allow create: if request.resource.data.keys().hasAll(['customerName', 'customerEmail', 'customerPhone', 'date', 'time', 'status', 'createdAt', 'updatedAt'])
                     && request.resource.data.customerName is string
-                    && request.resource.data.customerEmail is string
-                    && request.resource.data.customerPhone is string
+                    && (request.resource.data.customerEmail == null || request.resource.data.customerEmail is string)
+                    && (request.resource.data.customerPhone == null || request.resource.data.customerPhone is string)
                     && request.resource.data.date is string
                     && request.resource.data.time is string
                     && request.resource.data.status is string
                     && request.resource.data.createdAt is string
-                    && request.resource.data.updatedAt is string;
+                    && request.resource.data.updatedAt is string
+                    && (!('serviceId' in request.resource.data) || request.resource.data.serviceId == null || request.resource.data.serviceId is string)
+                    && (!('serviceName' in request.resource.data) || request.resource.data.serviceName == null || request.resource.data.serviceName is string)
+                    && (!('duration' in request.resource.data) || request.resource.data.duration == null || request.resource.data.duration is int);
       
       // Allow updates (admin can edit appointments via server actions)
       // Admin authorization is enforced in server actions via requireAdmin()
-      allow update: if request.resource.data.keys().hasAll(['customerName', 'customerEmail', 'customerPhone', 'date', 'time', 'status', 'createdAt', 'updatedAt'])
+      // Note: Updates are partial, so we validate fields that are present
+      // customerEmail, customerPhone, serviceId, serviceName, duration can be null
+      allow update: if request.resource.data.keys().hasAll(['customerName', 'date', 'time', 'status', 'createdAt', 'updatedAt'])
                     && request.resource.data.customerName is string
-                    && request.resource.data.customerEmail is string
-                    && request.resource.data.customerPhone is string
                     && request.resource.data.date is string
                     && request.resource.data.time is string
                     && request.resource.data.status is string
-                    && request.resource.data.updatedAt is string;
+                    && request.resource.data.updatedAt is string
+                    && (!('customerEmail' in request.resource.data) || request.resource.data.customerEmail == null || request.resource.data.customerEmail is string)
+                    && (!('customerPhone' in request.resource.data) || request.resource.data.customerPhone == null || request.resource.data.customerPhone is string)
+                    && (!('serviceId' in request.resource.data) || request.resource.data.serviceId == null || request.resource.data.serviceId is string)
+                    && (!('serviceName' in request.resource.data) || request.resource.data.serviceName == null || request.resource.data.serviceName is string)
+                    && (!('duration' in request.resource.data) || request.resource.data.duration == null || request.resource.data.duration is int);
       
       // Allow deletion (admin can delete appointments via server actions)
       // Admin authorization is enforced in server actions via requireAdmin()
