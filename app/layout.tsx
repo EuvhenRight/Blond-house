@@ -8,6 +8,7 @@ import { Providers } from './providers'
 const plusJakartaSans = Plus_Jakarta_Sans({
 	variable: '--font-plus-jakarta-sans',
 	subsets: ['latin'],
+	weight: ['200', '300', '400', '500', '600', '700', '800'], // Load all weights including bold (700)
 })
 
 export const metadata: Metadata = {
@@ -39,7 +40,7 @@ export default function RootLayout({
 	return (
 		<html lang='en'>
 			<body
-				className={`${plusJakartaSans.variable} antialiased bg-linear-to-r from-amber-50 via-white to-amber-50 text-zinc-900 min-h-screen`}
+				className={`${plusJakartaSans.variable} antialiased bg-linear-to-r from-amber-50 via-white to-amber-150 text-zinc-900 min-h-screen`}
 			>
 				<Providers>
 					<Header />

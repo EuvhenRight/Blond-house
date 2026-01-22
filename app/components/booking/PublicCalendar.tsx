@@ -1,10 +1,11 @@
 'use client'
 
+import type { DayCellContentArg } from '@fullcalendar/core'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import FullCalendar from '@fullcalendar/react'
 import timeGridPlugin from '@fullcalendar/timegrid'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	getAppointmentsByDateRangeAction,
 	getAvailabilityAction,
@@ -43,34 +44,38 @@ interface DayCellClassNamesArg {
 	}
 }
 
-interface DayCellDidMountArg {
-	date: Date
-	el: HTMLElement
-	view: {
-		type: string
-	}
-}
-
 export default function PublicCalendar({
 	onDateSelect,
 	selectedDate: propSelectedDate,
 	serviceDurationMinutes,
 }: PublicCalendarProps) {
 	const [workingDays, setWorkingDays] = useState<Set<string>>(new Set())
-	const [appointmentCounts, setAppointmentCounts] = useState<
-		Map<string, number>
-	>(new Map())
 	const [datesWithNoSlots, setDatesWithNoSlots] = useState<Set<string>>(
 		new Set()
 	)
 	const [localSelectedDate, setLocalSelectedDate] = useState<string | null>(
 		null
 	)
+	const [calendarVersion, setCalendarVersion] = useState(0)
 	const [, setIsLoading] = useState(false)
+	const [visibleRange, setVisibleRange] = useState<{
+		start: Date | null
+		end: Date | null
+	}>({ start: null, end: null })
+	const [currentViewDate, setCurrentViewDate] = useState<Date>(new Date())
+
+	// Memoized props to avoid re-render loops in FullCalendar
+	const validRange = useMemo(
+		() => ({
+			start: new Date().toISOString().split('T')[0],
+		}),
+		[]
+	)
 
 	// Track loaded date ranges to prevent duplicate requests
 	const loadedRangesRef = useRef<Set<string>>(new Set())
 	const loadTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const lastViewedMonthRef = useRef<string | null>(null)
 
 	// Use propSelectedDate as source of truth, fallback to localSelectedDate
 	const effectiveSelectedDate =
@@ -126,22 +131,6 @@ export default function PublicCalendar({
 							merged.delete(normalizedDate)
 						}
 					})
-					return merged
-				})
-
-				// Count appointments per date
-				const counts = new Map<string, number>()
-
-				appointments
-					.filter(apt => apt.status === 'confirmed')
-					.forEach(apt => {
-						const date = apt.date.split('T')[0]
-						counts.set(date, (counts.get(date) || 0) + 1)
-					})
-
-				setAppointmentCounts(prev => {
-					const merged = new Map(prev)
-					counts.forEach((count, date) => merged.set(date, count))
 					return merged
 				})
 
@@ -244,6 +233,7 @@ export default function PublicCalendar({
 					datesWithNoAvailableSlots.forEach(date => merged.add(date))
 					return merged
 				})
+				setCalendarVersion(v => v + 1) // force FullCalendar remount so colors redraw with latest data
 			} catch {
 				// Remove range key on error so it can be retried
 				loadedRangesRef.current.delete(rangeKey)
@@ -265,6 +255,52 @@ export default function PublicCalendar({
 
 	const handleDatesSet = useCallback(
 		(dateInfo: DatesSetArg) => {
+			// Track visible range for header display
+			const start = dateInfo.start
+			const endExclusive = dateInfo.end
+			const end = new Date(endExclusive.getTime() - 24 * 60 * 60 * 1000)
+			setVisibleRange({ start, end })
+			// Capture the current view date so remounts preserve it
+			setCurrentViewDate(start)
+
+			// Check if the visible month has changed
+			const currentMonthKey = `${start.getFullYear()}-${start.getMonth()}`
+			const monthChanged = lastViewedMonthRef.current !== currentMonthKey
+
+			// If month changed, clear cache for ranges that overlap with current month to force refresh
+			if (monthChanged && lastViewedMonthRef.current !== null) {
+				// Clear cached ranges that might include dates from the current month
+				// We'll clear all ranges to ensure fresh data when navigating between months
+				loadedRangesRef.current.clear()
+				// Also clear the working days and dates with no slots for the current month
+				// This will force a fresh calculation
+				setWorkingDays(prev => {
+					const filtered = new Set<string>()
+					prev.forEach(date => {
+						const dateObj = new Date(date + 'T00:00:00')
+						const dateMonth = `${dateObj.getFullYear()}-${dateObj.getMonth()}`
+						// Keep dates from other months, only clear current month
+						if (dateMonth !== currentMonthKey) {
+							filtered.add(date)
+						}
+					})
+					return filtered
+				})
+				setDatesWithNoSlots(prev => {
+					const filtered = new Set<string>()
+					prev.forEach(date => {
+						const dateObj = new Date(date + 'T00:00:00')
+						const dateMonth = `${dateObj.getFullYear()}-${dateObj.getMonth()}`
+						// Keep dates from other months, only clear current month
+						if (dateMonth !== currentMonthKey) {
+							filtered.add(date)
+						}
+					})
+					return filtered
+				})
+			}
+			lastViewedMonthRef.current = currentMonthKey
+
 			// Debounce datesSet to prevent excessive requests during rapid navigation
 			if (loadTimeoutRef.current) {
 				clearTimeout(loadTimeoutRef.current)
@@ -273,66 +309,80 @@ export default function PublicCalendar({
 			loadTimeoutRef.current = setTimeout(() => {
 				const start = dateInfo.start
 				const end = dateInfo.end
-				// Load availability for visible range + buffer
+				// Load availability for visible range + buffer around the visible dates
 				const bufferStart = new Date(start)
 				bufferStart.setDate(bufferStart.getDate() - 7)
 				const bufferEnd = new Date(end)
 				bufferEnd.setDate(bufferEnd.getDate() + 7)
 				void loadAvailability(bufferStart, bufferEnd)
-
-				// After dates are set, manually update styling for selected date if it's in the visible range
-				if (effectiveSelectedDate) {
-					setTimeout(() => {
-						// Find the selected day cell and apply styling
-						const calendarContainer = document.querySelector('.fc')
-						if (calendarContainer) {
-							const dayCells =
-								calendarContainer.querySelectorAll('.fc-daygrid-day')
-							// First, remove selected class and border from ALL cells
-							dayCells.forEach(cell => {
-								const cellFrame = cell.querySelector(
-									'.fc-daygrid-day-frame'
-								) as HTMLElement
-								if (cellFrame) {
-									cellFrame.classList.remove('fc-day-selected')
-									const dateAttr = cell.getAttribute('data-date')
-									if (dateAttr) {
-										const normalizedAttr = dateAttr.split('T')[0]
-										// Only reset border if this is NOT the selected date
-										if (normalizedAttr !== effectiveSelectedDate) {
-											cellFrame.style.border = '2px solid transparent'
-										}
-									}
-								}
-							})
-							// Then, apply selected styling only to the selected day
-							dayCells.forEach(dayCell => {
-								const dateAttr = dayCell.getAttribute('data-date')
-								if (dateAttr) {
-									const normalizedAttr = dateAttr.split('T')[0]
-									const frame = dayCell.querySelector(
-										'.fc-daygrid-day-frame'
-									) as HTMLElement
-									if (frame && normalizedAttr === effectiveSelectedDate) {
-										// Apply selected styling
-										frame.classList.add('fc-day-selected', 'cursor-pointer')
-										frame.style.border = '2px solid #3b82f6'
-										frame.style.borderRadius = '0'
-										const isWorking = workingDays.has(effectiveSelectedDate)
-										frame.style.backgroundColor = isWorking
-											? '#dcfce7'
-											: 'transparent'
-										frame.style.boxSizing = 'border-box'
-									}
-								}
-							})
-						}
-					}, 100)
-				}
 			}, 300) // 300ms debounce
 		},
-		[loadAvailability, effectiveSelectedDate, workingDays]
+		[loadAvailability]
 	)
+
+	// Formatting helpers for header display
+	const formatDateRangeLabel = useMemo(() => {
+		if (!visibleRange.start || !visibleRange.end) return ''
+		const fmt = new Intl.DateTimeFormat('en', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric',
+		})
+		return `${fmt.format(visibleRange.start)} – ${fmt.format(visibleRange.end)}`
+	}, [visibleRange])
+
+	const monthYearLabel = useMemo(() => {
+		if (!visibleRange.start) return ''
+		return new Intl.DateTimeFormat('en', {
+			month: 'long',
+			year: 'numeric',
+		})
+			.format(visibleRange.start)
+			.toUpperCase()
+	}, [visibleRange])
+
+	const monthLabel = useMemo(() => {
+		if (!visibleRange.start) return ''
+		return new Intl.DateTimeFormat('en', {
+			month: 'long',
+		})
+			.format(visibleRange.start)
+			.toUpperCase()
+	}, [visibleRange])
+
+	const yearLabel = useMemo(() => {
+		if (!visibleRange.start) return ''
+		return new Intl.DateTimeFormat('en', {
+			year: 'numeric',
+		}).format(visibleRange.start)
+	}, [visibleRange])
+
+	const isoWeekNumber = useMemo(() => {
+		if (!visibleRange.start) return null
+		const d = new Date(
+			Date.UTC(
+				visibleRange.start.getFullYear(),
+				visibleRange.start.getMonth(),
+				visibleRange.start.getDate()
+			)
+		)
+		const dayNum = d.getUTCDay() || 7
+		d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+		const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+		return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+	}, [visibleRange])
+
+	const startMonthAbbr = useMemo(() => {
+		if (!visibleRange.start) return ''
+		return new Intl.DateTimeFormat('en', { month: 'short' })
+			.format(visibleRange.start)
+			.toUpperCase()
+	}, [visibleRange])
+
+	const startDay = useMemo(() => {
+		if (!visibleRange.start) return ''
+		return visibleRange.start.getDate().toString()
+	}, [visibleRange])
 
 	// Cleanup timeout on unmount
 	useEffect(() => {
@@ -418,61 +468,51 @@ export default function PublicCalendar({
 		[workingDays]
 	)
 
-	const isToday = useCallback((dateStr: string) => {
-		if (!dateStr) return false
+	const getDayStatus = useCallback(
+		(date: Date) => {
+			const normalizedDate = formatDateLocal(date)
+			const isPast = isPastDate(normalizedDate)
+			const isWorking = isWorkingDay(normalizedDate)
+			const hasNoSlots = datesWithNoSlots.has(normalizedDate)
+			const isAvailable = isWorking && !hasNoSlots && !isPast
+			const isFullyBooked = isWorking && hasNoSlots && !isPast
 
-		const today = new Date()
-		today.setHours(0, 0, 0, 0)
-		const normalizedDate = dateStr.split('T')[0]
-		const date = new Date(normalizedDate)
-		date.setHours(0, 0, 0, 0)
-		return date.getTime() === today.getTime()
-	}, [])
+			let status: 'available' | 'fully-booked' | 'unavailable' | 'past'
+			if (isPast) status = 'past'
+			else if (isAvailable) status = 'available'
+			else if (isFullyBooked) status = 'fully-booked'
+			else status = 'unavailable'
+
+			return { status, normalizedDate }
+		},
+		[datesWithNoSlots, isPastDate, isWorkingDay]
+	)
 
 	const dayCellClassNames = useCallback(
 		(arg: DayCellClassNamesArg) => {
 			const classes: string[] = []
-			if (!arg.dateStr) {
-				return classes
+			if (!arg.dateStr) return classes
+
+			const { status, normalizedDate } = getDayStatus(arg.date)
+			const isSelected = effectiveSelectedDate === normalizedDate
+
+			if (status === 'past') {
+				classes.push('fc-day-past', 'cursor-not-allowed')
+			} else if (isSelected) {
+				classes.push('fc-day-selected')
 			}
 
-			// Normalize date string to YYYY-MM-DD format for comparison
-			const normalizedDate = arg.dateStr.split('T')[0]
-			const isPast = isPastDate(normalizedDate)
-			const isWorking = isWorkingDay(normalizedDate)
-
-			// Use effective selected date for comparison (already normalized)
-			const isSelected = effectiveSelectedDate === normalizedDate
-			const isTodayDate = isToday(normalizedDate)
-
-			if (isPast) {
-				classes.push('fc-day-past')
-				classes.push('cursor-not-allowed')
-			} else if (isSelected) {
-				// Selected days get selected class
-				classes.push('fc-day-selected')
-				classes.push('cursor-pointer')
-				// If it's also a working day, add available class for CSS specificity
-				if (isWorking) {
-					classes.push('fc-day-available')
-				}
-			} else if (isWorking) {
-				classes.push('fc-day-available')
-				classes.push('cursor-pointer')
-			} else {
-				// For unavailable days, allow today to be clickable even if not working
-				if (isTodayDate) {
-					classes.push('fc-day-unavailable')
-					classes.push('cursor-pointer') // Make today clickable even if unavailable
-				} else {
-					classes.push('fc-day-unavailable')
-					classes.push('cursor-not-allowed')
-				}
+			if (status === 'available') {
+				classes.push('fc-day-available', 'cursor-pointer')
+			} else if (status === 'fully-booked') {
+				classes.push('fc-day-fully-booked', 'cursor-pointer')
+			} else if (status === 'unavailable') {
+				classes.push('fc-day-unavailable', 'cursor-not-allowed')
 			}
 
 			return classes
 		},
-		[isPastDate, isWorkingDay, isToday, effectiveSelectedDate]
+		[getDayStatus, effectiveSelectedDate]
 	)
 
 	// Helper function to format date as YYYY-MM-DD in local timezone (not UTC)
@@ -483,345 +523,137 @@ export default function PublicCalendar({
 		return `${year}-${month}-${day}`
 	}
 
-	// Use dayCellDidMount to apply styling classes (same approach as selected day)
-	const dayCellDidMount = useCallback(
-		(arg: DayCellDidMountArg) => {
-			if (!arg.date) return
+	const dayCellContent = useCallback(
+		(arg: DayCellContentArg) => {
+			const { status } = getDayStatus(arg.date)
+			let statusLabel: string | null = null
+			if (status === 'available') statusLabel = 'Available'
+			else if (status === 'fully-booked') statusLabel = 'Fully booked'
+			else if (status === 'unavailable') statusLabel = 'Not available'
 
-			const frame = arg.el.querySelector('.fc-daygrid-day-frame') as HTMLElement
+			return (
+				<div className='flex h-full flex-col items-center justify-center py-1'>
+					<span className='text-sm font-semibold text-zinc-900'>
+						{arg.dayNumberText}
+					</span>
+					{statusLabel && (
+						<span className='mt-0.5 text-[11px] font-medium text-zinc-500 hidden md:block'>
+							{statusLabel}
+						</span>
+					)}
+				</div>
+			)
+		},
+		[getDayStatus]
+	)
+
+	const dayCellDidMount = useCallback(
+		(arg: { date: Date; el: HTMLElement }) => {
+			// Only apply availability styles to dates in the current visible month
+			// Check if this date's month matches the visible range's month
+			if (visibleRange.start) {
+				const dateMonth = arg.date.getMonth()
+				const dateYear = arg.date.getFullYear()
+				const visibleMonth = visibleRange.start.getMonth()
+				const visibleYear = visibleRange.start.getFullYear()
+
+				// If date is from a different month, don't apply availability styling
+				if (dateMonth !== visibleMonth || dateYear !== visibleYear) {
+					// Still apply basic styling but not availability status
+					const frame = arg.el.querySelector<HTMLElement>(
+						'.fc-daygrid-day-frame'
+					)
+					if (frame) {
+						frame.style.backgroundColor = '#ffffff'
+						frame.style.borderColor = '#e5e7eb'
+						frame.style.color = '#9ca3af'
+						frame.style.opacity = '0.6'
+						frame.style.boxShadow = 'none'
+					}
+					return
+				}
+			}
+
+			const { status, normalizedDate } = getDayStatus(arg.date)
+			const isSelected = effectiveSelectedDate === normalizedDate
+			const isToday = arg.el.classList.contains('fc-day-today')
+			const frame = arg.el.querySelector<HTMLElement>('.fc-daygrid-day-frame')
 			if (!frame) return
 
-			// Check if this day is from another month (other-month class)
-			// arg.el is the .fc-daygrid-day element
-			const dayCell = arg.el as HTMLElement
-			const isOtherMonth = dayCell.classList.contains('fc-day-other-month')
+			frame.dataset.status = status
 
-			// For days from other months, apply the same styling as past days
-			if (isOtherMonth) {
-				// Remove all classes
-				frame.classList.remove(
-					'fc-day-selected',
-					'fc-day-available',
-					'fc-day-unavailable',
-					'fc-day-past',
-					'cursor-pointer'
-				)
-
-				// Remove any existing content elements
-				const contentWrapper = frame.querySelector('.fc-day-content-wrapper')
-				if (contentWrapper) {
-					const countElement = contentWrapper.querySelector(
-						'.fc-day-appointment-count'
-					)
-					const notAvailableElement = contentWrapper.querySelector(
-						'.fc-day-not-available-text'
-					)
-					const statusElement = contentWrapper.querySelector(
-						'.fc-day-status-text'
-					)
-					if (countElement) countElement.remove()
-					if (notAvailableElement) notAvailableElement.remove()
-					if (statusElement) statusElement.remove()
-				}
-
-				// Apply same styling as past days
-				frame.style.backgroundColor = 'transparent'
-				frame.style.border = '2px solid transparent'
-				frame.style.opacity = '0.6'
-				frame.style.boxSizing = 'border-box'
-				frame.classList.add('cursor-not-allowed')
-				return // Early return - don't apply any other styling or data
-			}
-
-			// Normalize date to YYYY-MM-DD format using LOCAL time (not UTC)
-			const normalizedDate = formatDateLocal(arg.date)
-			const isSelected = effectiveSelectedDate === normalizedDate
-			const isPast = isPastDate(normalizedDate)
-			const isWorking = isWorkingDay(normalizedDate)
-			const hasNoSlots = datesWithNoSlots.has(normalizedDate)
-			// A day is truly available only if it's working AND has available slots
-			const isAvailable = isWorking && !hasNoSlots
-
-			// Remove all existing classes first
-			frame.classList.remove(
-				'fc-day-selected',
-				'fc-day-available',
-				'fc-day-unavailable',
-				'fc-day-past',
-				'bg-green-100',
-				'bg-red-100',
-				'border-2',
-				'border-blue-500',
-				'cursor-pointer',
-				'cursor-not-allowed'
-			)
-
-			// Ensure frame has flex layout for centering
-			frame.style.display = 'flex'
-			frame.style.flexDirection = 'column'
-			frame.style.alignItems = 'flex-end'
-			frame.style.justifyContent = 'center'
-			frame.style.minHeight = '4.5rem'
-			frame.style.boxSizing = 'border-box' // Prevent layout shift from borders
-
-			// Get or create content wrapper - centered layout
-			let contentWrapper = frame.querySelector(
-				'.fc-day-content-wrapper'
-			) as HTMLElement
-			if (!contentWrapper) {
-				// Remove any existing text elements
-				const existingCount = frame.querySelector('.fc-day-appointment-count')
-				const existingNotAvailable = frame.querySelector(
-					'.fc-day-not-available-text'
-				)
-				if (existingCount) existingCount.remove()
-				if (existingNotAvailable) existingNotAvailable.remove()
-
-				contentWrapper = document.createElement('div')
-				contentWrapper.className = 'fc-day-content-wrapper'
-				contentWrapper.style.position = 'absolute'
-				contentWrapper.style.top = '50%'
-				contentWrapper.style.left = '50%'
-				contentWrapper.style.transform = 'translate(-50%, -50%)'
-				contentWrapper.style.width = '100%'
-				contentWrapper.style.maxWidth = '100%'
-				contentWrapper.style.padding = '0.25rem'
-				contentWrapper.style.textAlign = 'center'
-				contentWrapper.style.display = 'flex'
-				contentWrapper.style.flexDirection = 'column'
-				contentWrapper.style.alignItems = 'center'
-				contentWrapper.style.justifyContent = 'center'
-
-				// Move day number into wrapper if it exists
-				const dayNumber = frame.querySelector('.fc-daygrid-day-number')
-				if (dayNumber && dayNumber.parentNode === frame) {
-					frame.removeChild(dayNumber)
-					contentWrapper.appendChild(dayNumber)
-				} else if (!dayNumber) {
-					// Create day number if it doesn't exist
-					const newDayNumber = document.createElement('span')
-					newDayNumber.className = 'fc-daygrid-day-number text-base font-bold'
-					newDayNumber.textContent = String(arg.date.getDate())
-					contentWrapper.appendChild(newDayNumber)
-				}
-
-				frame.style.position = 'relative' // Required for absolute positioning
-				frame.appendChild(contentWrapper)
-			}
-
-			const dayNumber = contentWrapper.querySelector(
+			const numberEl = frame.querySelector<HTMLElement>(
 				'.fc-daygrid-day-number'
-			) as HTMLElement
-			if (dayNumber) {
-				dayNumber.style.fontSize = 'clamp(0.75rem, 2.5vw, 1rem)' // Responsive: smaller on mobile
-				dayNumber.style.fontWeight = 'bold'
-				dayNumber.style.display = 'block'
-				dayNumber.style.marginBottom = '0.125rem' // Spacing between day and count
+			)
+			const statusEl = frame.querySelector<HTMLElement>('span:nth-child(2)')
+
+			// Get border-radius from CSS variable
+			const calendarContainer = arg.el.closest('.public-calendar')
+			const borderRadius = calendarContainer
+				? getComputedStyle(calendarContainer)
+						.getPropertyValue('--pc-day-radius')
+						.trim() || '0.375rem'
+				: '0.375rem'
+
+			const applySelected = () => {
+				const green = '#10b981'
+				frame.style.backgroundColor = '#ecfdf3'
+				frame.style.borderColor = green
+				frame.style.color = '#065f46'
+				frame.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.25)'
+				frame.style.borderRadius = borderRadius
+				if (numberEl) numberEl.style.color = '#065f46'
+				if (statusEl) statusEl.style.color = '#047857'
 			}
 
-			// Apply styling based on state
-			if (isPast) {
-				frame.classList.remove('fc-day-selected')
-				frame.classList.add('fc-day-past', 'cursor-not-allowed')
-				frame.style.backgroundColor = 'transparent'
-				frame.style.opacity = '0.6'
-				frame.style.border = '2px solid transparent' // Use transparent border to prevent layout shift
-				frame.style.boxSizing = 'border-box'
+			const apply = (bg: string, border: string, color: string) => {
+				frame.style.backgroundColor = bg
+				frame.style.borderColor = border
+				frame.style.color = color
+				frame.style.borderRadius = borderRadius
+				if (numberEl) numberEl.style.color = color
+				if (statusEl) statusEl.style.color = color
+			}
 
-				// Remove any status text
-				const countElement = contentWrapper.querySelector(
-					'.fc-day-appointment-count'
-				)
-				const notAvailableElement = contentWrapper.querySelector(
-					'.fc-day-not-available-text'
-				)
-				const statusElement = contentWrapper.querySelector(
-					'.fc-day-status-text'
-				)
-				if (countElement) countElement.remove()
-				if (notAvailableElement) notAvailableElement.remove()
-				if (statusElement) statusElement.remove()
-			} else if (isSelected) {
-				// Only this day should be selected
-				frame.classList.add('fc-day-selected', 'cursor-pointer')
-				frame.style.border = '2px solid #3b82f6' // blue-500
-				frame.style.borderRadius = '0'
-				frame.style.backgroundColor = isAvailable ? '#dcfce7' : 'transparent' // green-100 if available
-				frame.style.boxSizing = 'border-box' // Prevent layout shift
+			// If this cell is currently selected, prioritize the selected styling (green border)
+			if (isSelected || arg.el.classList.contains('fc-day-selected')) {
+				applySelected()
+				return
+			}
 
-				// Remove available slots count element if it exists
-				if (isAvailable) {
-					const countElement = contentWrapper.querySelector(
-						'.fc-day-appointment-count'
-					)
-					if (countElement) {
-						countElement.remove()
-					}
-
-					// Remove not available text if exists
-					const notAvailableElement = contentWrapper.querySelector(
-						'.fc-day-not-available-text'
-					)
-					if (notAvailableElement) notAvailableElement.remove()
-
-					// Add status text "Available" at the bottom
-					let statusElement = contentWrapper.querySelector(
-						'.fc-day-status-text'
-					) as HTMLElement
-					if (!statusElement) {
-						statusElement = document.createElement('span')
-						statusElement.className =
-							'fc-day-status-text text-xs font-medium text-green-700'
-						statusElement.style.fontSize = 'clamp(0.625rem, 2vw, 0.75rem)' // Responsive: smaller on mobile
-						statusElement.style.marginTop = '0.125rem'
-						statusElement.style.textOverflow = 'ellipsis'
-						statusElement.style.overflow = 'hidden'
-						statusElement.style.whiteSpace = 'nowrap'
-						contentWrapper.appendChild(statusElement)
-					} else {
-						statusElement.style.marginTop = '0.125rem'
-						statusElement.style.fontSize = 'clamp(0.625rem, 2vw, 0.75rem)' // Responsive: smaller on mobile
-						statusElement.style.textOverflow = 'ellipsis'
-						statusElement.style.overflow = 'hidden'
-						statusElement.style.whiteSpace = 'nowrap'
-						// Move to bottom if it already exists
-						contentWrapper.appendChild(statusElement)
-					}
-					statusElement.textContent = 'Available'
+			// If this is today but not selected, apply orange/amber border
+			if (isToday) {
+				if (status === 'available') {
+					apply('#fffbeb', '#f59e0b', '#b45309') // amber colors for today
+					frame.style.boxShadow = '0 4px 12px rgba(245,158,11,0.2)'
+				} else if (status === 'fully-booked') {
+					apply('#fee2e2', '#f59e0b', '#991b1b') // red background, orange border for today
+					frame.style.boxShadow = '0 4px 12px rgba(239,68,68,0.2)'
+				} else if (status === 'unavailable') {
+					apply('#fef3c7', '#f59e0b', '#92400e')
+					frame.style.boxShadow = 'none'
 				}
-			} else if (isAvailable) {
-				frame.classList.remove('fc-day-selected')
-				frame.classList.add('fc-day-available', 'cursor-pointer')
-				frame.style.backgroundColor = '#dcfce7' // green-100
-				frame.style.borderRadius = '0'
-				frame.style.border = '2px solid transparent' // Use transparent border to prevent layout shift
-				frame.style.boxSizing = 'border-box'
+				return
+			}
 
-				// Remove available slots count element if it exists
-				const countElement = contentWrapper.querySelector(
-					'.fc-day-appointment-count'
-				)
-				if (countElement) {
-					countElement.remove()
-				}
-
-				// Remove not available text if exists
-				const notAvailableElement = contentWrapper.querySelector(
-					'.fc-day-not-available-text'
-				)
-				if (notAvailableElement) notAvailableElement.remove()
-
-				// Add status text "Available" at the bottom
-				let statusElement = contentWrapper.querySelector(
-					'.fc-day-status-text'
-				) as HTMLElement
-				if (!statusElement) {
-					statusElement = document.createElement('span')
-					statusElement.className =
-						'fc-day-status-text text-xs font-medium text-green-700'
-					statusElement.style.fontSize = 'clamp(0.625rem, 2vw, 0.75rem)' // Responsive: smaller on mobile
-					statusElement.style.marginTop = '0.125rem'
-					statusElement.style.textOverflow = 'ellipsis'
-					statusElement.style.overflow = 'hidden'
-					statusElement.style.whiteSpace = 'nowrap'
-					contentWrapper.appendChild(statusElement)
-				} else {
-					statusElement.style.marginTop = '0.125rem'
-					statusElement.style.fontSize = 'clamp(0.625rem, 2vw, 0.75rem)' // Responsive: smaller on mobile
-					statusElement.style.textOverflow = 'ellipsis'
-					statusElement.style.overflow = 'hidden'
-					statusElement.style.whiteSpace = 'nowrap'
-					// Move to bottom if it already exists
-					contentWrapper.appendChild(statusElement)
-				}
-				statusElement.textContent = 'Available'
-			} else if (isWorking && hasNoSlots) {
-				// Working day but no available slots
-				frame.classList.remove('fc-day-selected')
-				frame.classList.add('fc-day-unavailable', 'cursor-not-allowed')
-				frame.style.backgroundColor = '#fee2e2' // red-100
-				frame.style.borderRadius = '0'
-				frame.style.border = '2px solid transparent' // Use transparent border to prevent layout shift
-				frame.style.boxSizing = 'border-box'
-
-				// Remove available slots count element if it exists
-				const countElement = contentWrapper.querySelector(
-					'.fc-day-appointment-count'
-				)
-				if (countElement) {
-					countElement.remove()
-				}
-
-				// Remove status text if exists
-				const statusElement = contentWrapper.querySelector(
-					'.fc-day-status-text'
-				)
-				if (statusElement) statusElement.remove()
-
-				// Add "Not available" text
-				let notAvailableElement = contentWrapper.querySelector(
-					'.fc-day-not-available-text'
-				) as HTMLElement
-				if (!notAvailableElement) {
-					notAvailableElement = document.createElement('span')
-					notAvailableElement.className =
-						'fc-day-not-available-text text-xs font-medium text-red-700'
-					notAvailableElement.style.fontSize = 'clamp(0.625rem, 2vw, 0.75rem)' // Responsive: smaller on mobile
-					notAvailableElement.style.marginTop = '0.125rem'
-					notAvailableElement.style.textOverflow = 'ellipsis'
-					notAvailableElement.style.overflow = 'hidden'
-					notAvailableElement.style.whiteSpace = 'nowrap'
-					contentWrapper.appendChild(notAvailableElement)
-				}
-				notAvailableElement.textContent = 'Not available'
+			// Regular status styling for non-today, non-selected dates
+			if (status === 'available') {
+				apply('#ecfdf3', '#a7f3d0', '#047857')
+				frame.style.boxShadow = '0 4px 12px rgba(16,185,129,0.15)'
+			} else if (status === 'fully-booked') {
+				apply('#fee2e2', '#ef4444', '#991b1b') // red background and border
+				frame.style.boxShadow = '0 4px 12px rgba(239,68,68,0.15)'
+			} else if (status === 'unavailable') {
+				apply('#f4f4f5', '#e4e4e7', '#6b7280')
+				frame.style.boxShadow = 'none'
 			} else {
-				frame.classList.remove('fc-day-selected')
-				frame.classList.add('fc-day-unavailable', 'cursor-not-allowed')
-				frame.style.backgroundColor = '#fee2e2' // red-100
-				frame.style.borderRadius = '0'
-				frame.style.border = '2px solid transparent' // Use transparent border to prevent layout shift
-				frame.style.boxSizing = 'border-box'
-
-				// Remove appointment count if exists
-				const countElement = contentWrapper.querySelector(
-					'.fc-day-appointment-count'
-				)
-				if (countElement) {
-					countElement.remove()
-				}
-
-				// Remove status text if exists
-				const statusElement = contentWrapper.querySelector(
-					'.fc-day-status-text'
-				)
-				if (statusElement) {
-					statusElement.remove()
-				}
-
-				// Add "Not available" status text
-				let notAvailableElement = contentWrapper.querySelector(
-					'.fc-day-not-available-text'
-				) as HTMLElement
-				if (!notAvailableElement) {
-					notAvailableElement = document.createElement('span')
-					notAvailableElement.className =
-						'fc-day-not-available-text text-xs font-medium text-red-700'
-					notAvailableElement.style.fontSize = 'clamp(0.625rem, 2vw, 0.75rem)' // Responsive: smaller on mobile
-					notAvailableElement.style.marginTop = '0.25rem'
-					notAvailableElement.style.textOverflow = 'ellipsis'
-					notAvailableElement.style.overflow = 'hidden'
-					notAvailableElement.style.whiteSpace = 'nowrap'
-					contentWrapper.appendChild(notAvailableElement)
-				} else {
-					notAvailableElement.style.fontSize = 'clamp(0.625rem, 2vw, 0.75rem)' // Responsive: smaller on mobile
-					notAvailableElement.style.textOverflow = 'ellipsis'
-					notAvailableElement.style.overflow = 'hidden'
-					notAvailableElement.style.whiteSpace = 'nowrap'
-				}
-				notAvailableElement.textContent = 'Not available'
+				// past
+				apply('#ffffff', '#e5e7eb', '#9ca3af')
+				frame.style.opacity = '0.6'
+				frame.style.boxShadow = 'none'
 			}
 		},
-		[effectiveSelectedDate, isPastDate, isWorkingDay, datesWithNoSlots]
+		[getDayStatus, effectiveSelectedDate, visibleRange]
 	)
 
 	// Calendar ref to access API
@@ -830,73 +662,249 @@ export default function PublicCalendar({
 	const calendarApiRef = useRef<any>(null)
 	const lastNavigatedDateRef = useRef<string | null>(null)
 
-	// Use key prop to force calendar re-render when workingDays or appointmentCounts change
-	// This ensures dayCellDidMount callback is called with the updated data
-	// Note: We don't include effectiveSelectedDate in the key to avoid remounting on date selection
-	const calendarKey = `${workingDays.size}-${appointmentCounts.size}`
-
-	// Store calendar API when component mounts or calendar ref changes
+	// Store calendar API once the component has mounted
 	useEffect(() => {
 		if (calendarRef.current) {
 			calendarApiRef.current = calendarRef.current.getApi()
 		}
-	}, [calendarKey])
+	}, [calendarVersion])
 
-	// Navigate to selected date's month when selectedDate changes
-	// The dayCellDidMount callback will handle styling when cells are rendered after navigation
+	// Update day cell styling when selected date changes (without full remount)
+	const previousSelectedRef = useRef<string | null>(null)
+	const calendarContainerRef = useRef<HTMLDivElement>(null)
 	useEffect(() => {
-		if (effectiveSelectedDate && calendarApiRef.current) {
-			// Only navigate if this is a different date than the last one we navigated to
-			if (lastNavigatedDateRef.current !== effectiveSelectedDate) {
-				try {
-					const selectedDateObj = new Date(effectiveSelectedDate + 'T00:00:00')
-					// Only navigate if the date is valid
-					if (!isNaN(selectedDateObj.getTime())) {
-						// Use setTimeout to ensure the calendar is fully rendered
-						setTimeout(() => {
-							if (calendarApiRef.current) {
-								calendarApiRef.current.gotoDate(selectedDateObj)
-								lastNavigatedDateRef.current = effectiveSelectedDate
-							}
-						}, 50)
+		const updateDayCellStyling = () => {
+			const calendarEl = calendarContainerRef.current
+			if (!calendarEl) return
+
+			// Get border-radius from CSS variable
+			const borderRadius =
+				getComputedStyle(calendarEl)
+					.getPropertyValue('--pc-day-radius')
+					.trim() || '0.375rem'
+
+			// Helper to apply styles
+			const applyStyles = (
+				dateStr: string,
+				bg: string,
+				border: string,
+				color: string,
+				shadow: string
+			) => {
+				const cell = calendarEl.querySelector(`[data-date="${dateStr}"]`)
+				if (!cell) return
+				const frame = cell.querySelector('.fc-daygrid-day-frame') as HTMLElement
+				if (!frame) return
+				const numberEl = frame.querySelector(
+					'.fc-daygrid-day-number'
+				) as HTMLElement
+				const statusEl = frame.querySelector('span:nth-child(2)') as HTMLElement
+
+				frame.style.backgroundColor = bg
+				frame.style.borderColor = border
+				frame.style.color = color
+				frame.style.boxShadow = shadow
+				frame.style.borderRadius = borderRadius
+				if (numberEl) numberEl.style.color = color
+				if (statusEl) statusEl.style.color = color
+			}
+
+			// Reset previous selection to its base status styling
+			if (previousSelectedRef.current) {
+				const prevDate = previousSelectedRef.current
+				const prevDateObj = new Date(prevDate + 'T00:00:00')
+				const { status } = getDayStatus(prevDateObj)
+
+				// Check if previous date is today
+				const prevCell = calendarEl.querySelector(`[data-date="${prevDate}"]`)
+				const isPrevToday = prevCell?.classList.contains('fc-day-today')
+
+				// If previous date is today, restore orange/amber border
+				if (isPrevToday) {
+					if (status === 'available') {
+						applyStyles(
+							prevDate,
+							'#fffbeb',
+							'#f59e0b',
+							'#b45309',
+							'0 4px 12px rgba(245,158,11,0.2)'
+						)
+					} else if (status === 'fully-booked') {
+						applyStyles(
+							prevDate,
+							'#fee2e2',
+							'#f59e0b',
+							'#991b1b',
+							'0 4px 12px rgba(239,68,68,0.2)'
+						)
+					} else if (status === 'unavailable') {
+						applyStyles(prevDate, '#fef3c7', '#f59e0b', '#92400e', 'none')
 					}
-				} catch {
-					// Silently handle errors
+				} else {
+					// Regular status styling for non-today dates
+					if (status === 'available') {
+						applyStyles(
+							prevDate,
+							'#ecfdf3',
+							'#a7f3d0',
+							'#047857',
+							'0 4px 12px rgba(16,185,129,0.15)'
+						)
+					} else if (status === 'fully-booked') {
+						applyStyles(
+							prevDate,
+							'#fee2e2',
+							'#ef4444',
+							'#991b1b',
+							'0 4px 12px rgba(239,68,68,0.15)'
+						)
+					}
 				}
 			}
+
+			// Apply selected styling to new selection
+			if (effectiveSelectedDate) {
+				applyStyles(
+					effectiveSelectedDate,
+					'#ecfdf3',
+					'#10b981',
+					'#065f46',
+					'0 0 0 3px rgba(16, 185, 129, 0.25)'
+				)
+				previousSelectedRef.current = effectiveSelectedDate
+			}
 		}
-	}, [effectiveSelectedDate])
+
+		updateDayCellStyling()
+	}, [effectiveSelectedDate, getDayStatus])
+
+	// Navigation handlers
+	const handlePrevMonth = useCallback(() => {
+		const api = calendarRef.current?.getApi()
+		if (api) api.prev()
+	}, [])
+
+	const handleNextMonth = useCallback(() => {
+		const api = calendarRef.current?.getApi()
+		if (api) api.next()
+	}, [])
+
+	const handleToday = useCallback(() => {
+		const api = calendarRef.current?.getApi()
+		if (api) api.today()
+	}, [])
 
 	return (
-		<div className='w-full'>
+		<div
+			ref={calendarContainerRef}
+			className='public-calendar w-full'
+			role='application'
+			aria-label='Booking calendar - Select an available date for your appointment'
+		>
+			{visibleRange.start && visibleRange.end && (
+				<div className='mb-4 sm:mb-6 flex items-center justify-between gap-2 sm:gap-4 md:gap-6'>
+					<div className='flex items-center gap-2 sm:gap-4 md:gap-5 flex-1 min-w-0'>
+						{/* Date Pill */}
+						<div className='bg-neutral-900 text-white rounded-xl sm:rounded-2xl px-2.5 sm:px-4 md:px-5 py-2 sm:py-3 md:py-3.5 flex flex-col items-center justify-center min-w-[56px] sm:min-w-[72px] md:min-w-[80px] shadow-lg border border-neutral-800 shrink-0'>
+							<span className='text-[9px] sm:text-[10px] md:text-[11px] font-semibold tracking-[0.15em] sm:tracking-[0.2em] text-amber-200 uppercase leading-none mb-0.5 sm:mb-1'>
+								{startMonthAbbr}
+							</span>
+							<span className='text-2xl sm:text-3xl md:text-4xl font-bold leading-none'>
+								{startDay}
+							</span>
+						</div>
+						{/* Month, Year, Week Info */}
+						<div
+							className='flex flex-col gap-0.5 min-w-0 flex-1'
+							style={{ fontFamily: 'title, serif' }}
+						>
+							<div className='text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 leading-tight truncate'>
+								{monthLabel}
+							</div>
+							<div className='text-xs sm:text-sm md:text-base lg:text-lg text-gray-700 leading-tight truncate'>
+								{yearLabel}
+								{isoWeekNumber ? ` • WEEK ${isoWeekNumber}` : ''}
+							</div>
+						</div>
+					</div>
+					{/* Navigation Controls */}
+					<div className='flex items-center gap-0.5 bg-white border border-gray-200 rounded-full px-1 sm:px-1.5 py-0.5 sm:py-1 shadow-sm shrink-0'>
+						<button
+							onClick={handlePrevMonth}
+							className='w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center text-gray-700 hover:bg-gray-50 rounded-full transition-all duration-200 text-lg sm:text-xl md:text-2xl font-light leading-none hover:text-gray-900 active:scale-95'
+							aria-label='Previous month'
+						>
+							‹
+						</button>
+						<button
+							onClick={handleToday}
+							className='px-2 sm:px-3 md:px-4 h-8 sm:h-9 md:h-10 flex items-center justify-center text-gray-900 font-medium hover:bg-gray-50 rounded-full transition-all duration-200 text-[10px] sm:text-xs md:text-sm active:scale-95'
+							style={{ fontFamily: 'title, serif' }}
+						>
+							Today
+						</button>
+						<button
+							onClick={handleNextMonth}
+							className='w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center text-gray-700 hover:bg-gray-50 rounded-full transition-all duration-200 text-lg sm:text-xl md:text-2xl font-light leading-none hover:text-gray-900 active:scale-95'
+							aria-label='Next month'
+						>
+							›
+						</button>
+					</div>
+				</div>
+			)}
 			<FullCalendar
-				key={calendarKey}
+				key={calendarVersion}
 				ref={calendarRef}
 				plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
 				initialView='dayGridMonth'
-				headerToolbar={{
-					left: 'prev,next',
-					center: 'title',
-					right: 'today',
-				}}
+				initialDate={currentViewDate}
+				headerToolbar={false}
 				datesSet={handleDatesSet}
 				dateClick={handleDateClick}
 				dayCellClassNames={dayCellClassNames}
+				dayCellContent={dayCellContent}
 				dayCellDidMount={dayCellDidMount}
 				height='auto'
 				locale='en'
 				firstDay={1}
-				validRange={{
-					start: new Date().toISOString().split('T')[0],
-				}}
+				validRange={validRange}
 				views={{
 					dayGridMonth: {
-						fixedWeekCount: true,
+						fixedWeekCount: false,
 						weekNumbers: false,
-						showNonCurrentDates: true,
+						showNonCurrentDates: false,
 					},
 				}}
 			/>
+			{/* Mobile Legend - Three states of days */}
+			<div className='md:hidden mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-zinc-200'>
+				<div className='flex flex-col gap-1.5 sm:gap-2'>
+					<div className='flex items-center gap-1.5 sm:gap-2'>
+						<div className='w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#ecfdf3] border border-[#a7f3d0] shrink-0'></div>
+						<span className='text-[10px] sm:text-xs text-zinc-700'>
+							Available
+						</span>
+					</div>
+					<div className='flex items-center gap-1.5 sm:gap-2'>
+						<div className='w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#fee2e2] border border-[#ef4444] shrink-0'></div>
+						<span className='text-[10px] sm:text-xs text-zinc-700'>
+							Fully booked
+						</span>
+					</div>
+					<div className='flex items-center gap-1.5 sm:gap-2'>
+						<div className='w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#f4f4f5] border border-[#e4e4e7] shrink-0'></div>
+						<span className='text-[10px] sm:text-xs text-zinc-700'>
+							Not available
+						</span>
+					</div>
+				</div>
+			</div>
+			<p className='sr-only'>
+				Use arrow keys to navigate dates, Enter or Space to select. Available
+				dates are highlighted in green. Dates with no available slots are shown
+				in red.
+			</p>
 		</div>
 	)
 }

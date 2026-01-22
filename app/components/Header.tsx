@@ -7,6 +7,12 @@ import { navigation } from '../lib/constants'
 export default function Header() {
 	const pathname = usePathname()
 	const isBookingPage = pathname === '/book'
+	const isAdminPage = pathname?.startsWith('/admin')
+
+	// Don't render header on admin pages
+	if (isAdminPage) {
+		return null
+	}
 
 	return (
 		<header className='sticky top-0 z-20 border-b border-zinc-200/80 backdrop-blur-md '>
@@ -20,32 +26,53 @@ export default function Header() {
 					{/* Logo - Blond House with gold font styling */}
 					<div className='gold-font relative leading-tight text-shadow-lg'>
 						<span
-							className='block text-xl sm:text-xl md:text-2xl'
+							className='block text-lg sm:text-xl md:text-2xl lg:text-2xl'
 							style={{ fontStyle: 'bold', letterSpacing: '0.04em' }}
 						>
 							BLOND HOUSE
 						</span>
 					</div>
 				</Link>
-				<nav className='hidden items-center gap-4 md:gap-6 text-xs sm:text-sm md:text-base font-medium text-zinc-600 lg:flex'>
+				<nav className='hidden items-center gap-4 md:gap-6 text-sm sm:text-base md:text-base lg:text-base font-medium text-zinc-600 lg:flex'>
 					<Link href='/book' className='hover:text-zinc-900 transition-colors'>
 						Book Appointment
 					</Link>
-					{navigation.header.map(item => (
-						<Link
-							key={item.href}
-							href={item.href}
-							className='hover:text-zinc-900 transition-colors'
-						>
-							{item.label}
-						</Link>
-					))}
+					{navigation.header.map(item => {
+						const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+							if (item.href.startsWith('#')) {
+								e.preventDefault()
+								const element = document.querySelector(item.href)
+								if (element) {
+									const headerOffset = 80
+									const elementPosition = element.getBoundingClientRect().top
+									const offsetPosition =
+										elementPosition + window.pageYOffset - headerOffset
+
+									window.scrollTo({
+										top: offsetPosition,
+										behavior: 'smooth',
+									})
+								}
+							}
+						}
+
+						return (
+							<Link
+								key={item.href}
+								href={item.href}
+								onClick={handleClick}
+								className='hover:text-zinc-900 transition-colors'
+							>
+								{item.label}
+							</Link>
+						)
+					})}
 				</nav>
 				<div className='flex items-center gap-2 sm:gap-3'>
 					{!isBookingPage && (
 						<Link
 							href='/book'
-							className='group relative rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 text-xs sm:text-sm md:text-base font-semibold text-white shadow-lg backdrop-blur-sm overflow-hidden transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95'
+							className='group relative rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 text-sm sm:text-base md:text-base font-semibold text-white shadow-lg backdrop-blur-sm overflow-hidden transition-all duration-300 hover:shadow-amber-500/50 hover:scale-105 active:scale-95'
 							aria-label='Book an appointment'
 						>
 							{/* Shimmer animation overlay */}

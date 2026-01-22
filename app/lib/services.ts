@@ -102,3 +102,74 @@ export function formatDuration(minutes: number): string {
 	return hours === 1 ? `1h ${mins}min` : `${hours}h ${mins}min`
 }
 
+/**
+ * Get color scheme for appointments based on service
+ * Each service gets a unique, distinct color for easy identification
+ */
+export function getServiceColor(serviceId?: string): {
+	backgroundColor: string
+	borderColor: string
+	color: string
+} {
+	// Color palette - each service has a unique, distinct color
+	const serviceColors: Record<
+		string,
+		{ bg: string; border: string; text: string }
+	> = {
+		highlights: {
+			bg: '#f59e0b', // amber-500 - Gold/Amber
+			border: '#d97706', // amber-600
+			text: '#ffffff',
+		},
+		'face-frame': {
+			bg: '#8b5cf6', // purple-500 - Purple
+			border: '#7c3aed', // purple-600
+			text: '#ffffff',
+		},
+		'hair-toning': {
+			bg: '#06b6d4', // cyan-500 - Cyan/Teal
+			border: '#0891b2', // cyan-600
+			text: '#ffffff',
+		},
+		'hair-cut': {
+			bg: '#10b981', // emerald-500 - Green
+			border: '#059669', // emerald-600
+			text: '#ffffff',
+		},
+		'lebel-express': {
+			bg: '#3b82f6', // blue-500 - Blue
+			border: '#2563eb', // blue-600
+			text: '#ffffff',
+		},
+		'lebel-full': {
+			bg: '#f97316', // orange-500 - Orange
+			border: '#ea580c', // orange-600
+			text: '#ffffff',
+		},
+		'scalp-peeling': {
+			bg: '#ec4899', // pink-500 - Pink
+			border: '#db2777', // pink-600
+			text: '#ffffff',
+		},
+		'beach-waves': {
+			bg: '#14b8a6', // teal-500 - Teal
+			border: '#0d9488', // teal-600
+			text: '#ffffff',
+		},
+	}
+
+	const defaultColor = {
+		bg: '#e5e7eb', // gray-200
+		border: '#9ca3af', // gray-400
+		text: '#374151', // gray-700
+	}
+
+	const color = serviceId ? serviceColors[serviceId] || defaultColor : defaultColor
+
+	return {
+		backgroundColor: color.bg,
+		borderColor: color.border,
+		color: color.text,
+	}
+}
+

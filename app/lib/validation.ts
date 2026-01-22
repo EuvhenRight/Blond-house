@@ -69,7 +69,13 @@ export const adminAppointmentSchema = z.object({
 		)
 		.optional()
 		.or(z.literal('')),
-	serviceId: z.string().optional(),
+	serviceId: z
+		.string()
+		.min(1, 'Please select a service')
+		.refine(
+			val => services.some(service => service.id === val),
+			'Please select a valid service'
+		),
 	serviceName: z.string().optional(),
 	duration: z.number().optional(),
 	date: z

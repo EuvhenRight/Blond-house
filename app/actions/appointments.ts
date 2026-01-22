@@ -229,7 +229,36 @@ export async function adminCreateBooking(data: BookingFormData): Promise<{
 	try {
 		await requireAdmin() // Require admin access
 
-		// Create appointment in database (skip availability check for admin)
+		// Prevent admins from creating appointments that overlap existing bookings
+		// or do not fit into the working hours for that day.
+		const date = data.date
+		const time = data.time
+		const durationMinutes = data.duration || 60
+
+		if (!date || !time) {
+			return {
+				success: false,
+				error: 'Date and time are required to create an appointment.',
+			}
+		}
+
+		// Use the same availability logic as the public booking flow:
+		// getAvailableTimeSlots returns only slots that fit within working hours
+		// and do not conflict with existing confirmed appointments (with buffer).
+		const availableSlotsForAdminCheck = await getAvailableTimeSlots(
+			date,
+			durationMinutes
+		)
+
+		if (!availableSlotsForAdminCheck.includes(time)) {
+			return {
+				success: false,
+				error:
+					'This time slot is already booked or not available. Please choose another time.',
+			}
+		}
+
+		// Create appointment in database (admin flag keeps existing behavior)
 		const appointmentId = await createAppointmentDb(data, true)
 
 		// Fetch the created appointment for email
@@ -277,13 +306,17 @@ export async function adminUpdateBooking(
 			return { success: false, error: 'Appointment not found' }
 		}
 
-		// Check if date or time changed
+		// Check if date, time, or duration (e.g. via service change) changed
 		const dateChanged = data.date && data.date !== oldAppointment.date
 		const timeChanged = data.time && data.time !== oldAppointment.time
+		const durationChanged =
+			typeof data.duration === 'number' &&
+			data.duration !== (oldAppointment.duration || 60)
 		const timeOrDateChanged = dateChanged || timeChanged
 
-		// If date or time is being changed, validate the new slot doesn't conflict with existing appointments
-		if (timeOrDateChanged && data.status !== 'cancelled') {
+		// If date, time, or duration is being changed, validate the new slot
+		// doesn't conflict with existing appointments and still fits in working hours.
+		if ((timeOrDateChanged || durationChanged) && data.status !== 'cancelled') {
 			const newDate = data.date || oldAppointment.date
 			const newTime = data.time || oldAppointment.time
 			const newDuration = data.duration || oldAppointment.duration || 60

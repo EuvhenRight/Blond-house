@@ -10,15 +10,17 @@ export const siteConfig = {
 	description_2: 'Precision.',
 	description_3: 'Flow.',
 	location: 'Amsterdam',
-	whatsapp: 'https://wa.me/31612345678',
-	googleMaps: 'https://maps.google.com/?q=Amsterdam',
+	address: 'Warmoesstraat 155, floor 4, Amsterdam',
+	email: 'yuri.prodjhair@gmail.com',
+	phone: '+31620991336',
+	whatsapp: 'https://wa.me/31620991336',
+	googleMaps: 'https://maps.google.com/?q=Warmoesstraat+155,+Amsterdam',
 } as const
 
 export const navigation = {
 	header: [
+		{ label: 'About', href: '#about' },
 		{ label: 'Services', href: '#services' },
-		{ label: 'How it works', href: '#how-it-works' },
-		{ label: 'Pricing', href: '#pricing' },
 	],
 	footer: [
 		{ label: 'Privacy', href: '#' },

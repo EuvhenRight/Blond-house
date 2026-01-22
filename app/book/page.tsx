@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import { Suspense, useCallback, useEffect, useRef } from 'react'
 import BookingForm from '../components/booking/BookingForm'
+import BookingProgress from '../components/booking/BookingProgress'
 import PublicCalendar from '../components/booking/PublicCalendar'
 import SelectedServiceDisplay from '../components/booking/SelectedServiceDisplay'
 import ServiceSelector from '../components/booking/ServiceSelector'
@@ -103,22 +104,49 @@ function BookPageContent() {
 		resetBooking()
 	}, [resetBooking])
 
+	// Determine current step for progress indicator
+	const getCurrentStep = (): 'service' | 'date' | 'time' | 'details' => {
+		if (isReadyToBook) return 'details'
+		if (bookingState.selectedTime) return 'time'
+		if (bookingState.selectedDate) return 'date'
+		return 'service'
+	}
+
 	return (
-		<div className='min-h-screen'>
-			<main className='w-full py-12 sm:py-16 md:py-20'>
+		<div className='min-h-screen relative'>
+			<main className='w-full py-4 sm:py-4 md:py-6 lg:py-6' role='main'>
 				<div className='mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-12'>
 					{/* Page Header */}
-					<div className='text-center mb-12'>
-						<h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-zinc-900 mb-4'>
+					<header className='text-center mb-8 sm:mb-12'>
+						<h3 className='text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-zinc-900 mb-4 sm:mb-6'>
 							Book an Appointment
-						</h1>
+						</h3>
+						<p className='text-xs sm:text-sm md:text-base text-zinc-600 max-w-2xl mx-auto'>
+							Select your service, choose a date and time, and complete your
+							booking
+						</p>
+					</header>
+
+					{/* Progress Indicator */}
+					<div className='sticky top-17 z-20 bg-white/95 backdrop-blur supports-backdrop-filter:backdrop-blur-sm rounded-lg shadow-sm px-2.5 py-2 mb-3 transition-all duration-300'>
+						<BookingProgress currentStep={getCurrentStep()} />
 					</div>
 
-					<div className='grid gap-8 lg:grid-cols-3'>
+					<div className='grid gap-6 sm:gap-8 lg:grid-cols-3'>
 						{/* Calendar Section - 2/3 width */}
-						<div className='bg-white rounded-2xl shadow-lg p-6 lg:col-span-2'>
+						<section
+							className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-2'
+							aria-labelledby={
+								!bookingState.selectedServiceId
+									? 'service-selection-heading'
+									: 'date-selection-heading'
+							}
+						>
 							{!bookingState.selectedServiceId && (
-								<h2 className='text-2xl font-bold text-zinc-900 mb-6'>
+								<h2
+									id='service-selection-heading'
+									className='text-xl sm:text-2xl font-bold text-zinc-900 mb-4 sm:mb-6'
+								>
 									Select Service
 								</h2>
 							)}
@@ -130,20 +158,14 @@ function BookPageContent() {
 								/>
 							) : (
 								<>
-									<SelectedServiceDisplay
-										serviceId={bookingState.selectedServiceId}
-										onChange={() => setSelectedService(null)}
-									/>
-									{/* Legend for mobile - explains color coding */}
-									<div className='mb-4 sm:hidden flex items-center justify-center gap-4 text-xs'>
-										<div className='flex items-center gap-2'>
-											<div className='w-4 h-4 bg-green-100 rounded'></div>
-											<span className='text-zinc-700'>Available</span>
-										</div>
-										<div className='flex items-center gap-2'>
-											<div className='w-4 h-4 bg-red-100 rounded'></div>
-											<span className='text-zinc-700'>Not available</span>
-										</div>
+									<h2 id='date-selection-heading' className='sr-only'>
+										Select Date and Time
+									</h2>
+									<div className='-mx-4 sm:-mx-6 md:mx-0 mb-6'>
+										<SelectedServiceDisplay
+											serviceId={bookingState.selectedServiceId}
+											onChange={() => setSelectedService(null)}
+										/>
 									</div>
 									<PublicCalendar
 										onDateSelect={handleDateSelect}
@@ -157,40 +179,30 @@ function BookPageContent() {
 									/>
 								</>
 							)}
-						</div>
+						</section>
 
 						{/* Booking Section - 1/3 width */}
-						<div className='bg-white rounded-2xl shadow-lg p-6 lg:col-span-1 flex flex-col'>
+						<aside
+							className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-1 flex flex-col sticky top-46 h-fit'
+							aria-label='Booking details sidebar'
+						>
 							{(!bookingState.selectedServiceId || isReadyToBook) && (
-								<h2 className='text-2xl font-bold text-zinc-900 mb-6'>
+								<h2 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-4 sm:mb-6'>
 									{!bookingState.selectedServiceId
 										? 'Service Selection'
 										: 'Booking Details'}
 								</h2>
 							)}
 
-							{bookingState.selectedDate &&
-								!bookingState.selectedTime &&
-								bookingState.availableSlots.length > 0 && (
-									<TimeSlotSelector
-										availableSlots={bookingState.availableSlots}
-										selectedTime={bookingState.selectedTime}
-										selectedDate={bookingState.selectedDate}
-										onTimeSelect={setSelectedTime}
-									/>
-								)}
-
-							{bookingState.selectedDate &&
-								bookingState.availableSlots.length === 0 && (
-									<div className='text-center py-12 text-zinc-600'>
-										<p className='font-medium mb-2'>
-											No available time slots for this date.
-										</p>
-										<p className='text-sm'>
-											Please select another date from the calendar.
-										</p>
-									</div>
-								)}
+							{bookingState.selectedDate && (
+								<TimeSlotSelector
+									availableSlots={bookingState.availableSlots}
+									selectedTime={bookingState.selectedTime}
+									selectedDate={bookingState.selectedDate}
+									onTimeSelect={setSelectedTime}
+									isLoading={false}
+								/>
+							)}
 
 							{!bookingState.selectedServiceId && (
 								<div className='text-center py-12 text-zinc-600'>
@@ -198,11 +210,11 @@ function BookPageContent() {
 								</div>
 							)}
 
-						{bookingState.selectedServiceId && !bookingState.selectedDate && (
-							<div className='sticky top-20 bg-white/95 backdrop-blur-sm border-b border-zinc-200 py-4 text-center text-zinc-600 z-10 mb-4'>
-								Please select an available date from the calendar to continue
-							</div>
-						)}
+							{bookingState.selectedServiceId && !bookingState.selectedDate && (
+								<div className='sticky top-20 bg-white/95 backdrop-blur-sm border-b border-zinc-200 py-4 text-center text-zinc-600 z-10 mb-4'>
+									Please select an available date from the calendar to continue
+								</div>
+							)}
 
 							{isReadyToBook && (
 								<BookingForm
@@ -212,7 +224,7 @@ function BookPageContent() {
 									onBookingSuccess={handleBookingSuccess}
 								/>
 							)}
-						</div>
+						</aside>
 					</div>
 				</div>
 			</main>

@@ -1,5 +1,14 @@
+/* stylelint-disable */
 /* Tailwind CSS v4 - @apply and @theme directives are valid */
 @import 'tailwindcss';
+
+/* ============================================
+   Global Styles
+   ============================================ */
+
+html {
+	scroll-behavior: smooth;
+}
 
 :root {
 	/* Theme Colors */
@@ -33,14 +42,42 @@
 }
 
 body {
-	font-family: var(--font-plus-jakarta-sans), sans-serif;
+	font-family: 'title', serif;
+	font-weight: lighter;
 	background: var(--color-background-gradient);
+}
+
+/* Headings - Content, sans-serif with bold weight */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: 'Content', var(--font-plus-jakarta-sans), sans-serif;
+	font-weight: 700;
+}
+
+/* All other text elements - title, serif with lighter weight */
+p,
+span,
+a,
+button,
+input,
+textarea,
+select,
+label,
+li,
+td,
+th {
+	font-family: 'title', serif;
+	font-weight: lighter;
 }
 
 /* Gold Font Style */
 .gold-font {
-	font-family: serif;
-	font-weight: bold;
+	font-family: serif !important;
+	font-weight: bold !important;
 	background: var(--gold-gradient);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -52,73 +89,995 @@ body {
 	letter-spacing: 0.02em;
 }
 
-/* FullCalendar Styles */
+/* ============================================
+   FullCalendar Base Styles
+   ============================================ */
+
 .fc {
 	@apply font-sans;
+	background: transparent;
 }
 
-/* Calendar grid borders - white 2px */
+.admin-calendar .fc {
+	background: white;
+	border-radius: 0.75rem;
+	overflow: hidden;
+}
+
+.fc-scrollgrid {
+	border-radius: 0.75rem;
+	overflow: hidden;
+}
+
+/* Base calendar grid borders (overridden by public/admin calendars) */
 .fc-daygrid-body td,
 .fc-daygrid-day,
 .fc-col-header-cell {
-	border: 2px solid white !important;
+	border: 1px solid #e5e7eb;
 }
 
-.fc-scrollgrid-section > table {
-	border: 2px solid white !important;
+/* ============================================
+   Public Calendar - Variables & Base Setup
+   ============================================ */
+
+.public-calendar {
+	--pc-day-radius: 0.375rem;
+	--pc-day-gap: 2px;
+	--pc-day-pad: 0.25rem;
+	--pc-day-border: #e5e7eb;
+	--pc-day-bg: #ffffff;
+	--pc-day-text: #0f172a;
+	--pc-day-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.fc-scrollgrid-sync-table td {
-	border: 2px solid white !important;
+/* Responsive day cell variables */
+@media (min-width: 375px) {
+	.public-calendar {
+		--pc-day-radius: 0.4375rem;
+		--pc-day-gap: 3px;
+		--pc-day-pad: 0.375rem;
+	}
 }
 
-/* Style days from other months - same style as past days */
-.fc-day-other-month,
-.fc-daygrid-day.fc-day-other-month {
-	@apply cursor-not-allowed;
+@media (min-width: 640px) {
+	.public-calendar {
+		--pc-day-radius: 0.5rem;
+		--pc-day-gap: 4px;
+		--pc-day-pad: 0.5rem;
+	}
 }
 
-.fc-daygrid-day.fc-day-other-month .fc-daygrid-day-frame {
-	@apply bg-transparent cursor-not-allowed;
-	background-color: transparent !important;
-	opacity: 0.6 !important;
-	border: 2px solid transparent !important;
-	box-sizing: border-box !important;
+/* Hide FullCalendar's built-in header */
+.public-calendar .fc-header-toolbar {
+	display: none !important;
 }
 
-.fc-daygrid-day.fc-day-other-month .fc-daygrid-day-number {
-	@apply text-zinc-400;
-	color: rgb(161 161 170) !important; /* zinc-400 */
+/* ============================================
+   Public Calendar - DayGrid Month View Layout
+   ============================================ */
+
+.public-calendar .fc-daygrid-view {
+	width: 100%;
+	overflow: hidden;
+	animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Calendar header (Month Year) */
-.fc-toolbar-title {
-	@apply text-xl font-semibold text-zinc-900 mx-4;
+.public-calendar .fc-daygrid-view .fc-scrollgrid {
+	width: 100%;
+	table-layout: fixed;
+	overflow: hidden;
+	max-width: 100%;
+	transition: opacity 0.3s ease-in-out;
 }
 
-/* Weekdays - clean headers */
-.fc-col-header-cell {
-	@apply text-xs font-semibold py-3 px-2 text-zinc-500 bg-transparent border-0;
+.public-calendar .fc-daygrid-view .fc-scrollgrid-section {
+	width: 100%;
 }
 
-/* Date numbers - clean styling */
-.fc-daygrid-day-number {
-	@apply text-[0.9375rem] font-medium p-2 relative;
+/* Table with border-spacing for gaps between days - consistent spacing */
+.public-calendar .fc-daygrid-view .fc-scrollgrid-section > table {
+	border-spacing: 0.25rem 0.4rem;
+	table-layout: fixed;
+	width: 100%;
+	background: transparent;
+	border-collapse: separate;
 }
 
-.fc-daygrid-day {
-	@apply min-h-[4.5rem] border-0 bg-transparent overflow-visible;
-	box-sizing: border-box;
-	padding: 1px;
-	background-color: white;
+@media (min-width: 375px) {
+	.public-calendar .fc-daygrid-view .fc-scrollgrid-section > table {
+		border-spacing: 0.3rem 0.5rem;
+	}
 }
 
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-view .fc-scrollgrid-section > table {
+		border-spacing: 0.4rem 0.65rem;
+	}
+}
+
+/* Ensure no extra spacing inside table cells */
+.public-calendar .fc-daygrid-view .fc-scrollgrid-section > table td,
+.public-calendar .fc-daygrid-view .fc-scrollgrid-section > table th {
+	padding: 0;
+	margin: 0;
+}
+
+/* Remove borders from public calendar grid */
+.public-calendar .fc-daygrid-body td,
+.public-calendar .fc-scrollgrid-sync-table td,
+.public-calendar .fc-col-header-cell,
+.public-calendar .fc-daygrid-view .fc-daygrid-day,
+.public-calendar .fc-daygrid-view .fc-scrollgrid,
+.public-calendar .fc-daygrid-view .fc-scrollgrid-section {
+	border: none;
+	background: transparent;
+}
+
+/* Ensure equal column widths - exactly 1/7 of table width */
+.public-calendar .fc-daygrid-view .fc-col-header-cell,
+.public-calendar .fc-daygrid-view .fc-daygrid-day {
+	width: calc(100% / 7);
+	min-width: 0;
+	max-width: calc(100% / 7);
+}
+
+.public-calendar .fc-daygrid-view .fc-daygrid-body td {
+	width: calc(100% / 7);
+	min-width: 0;
+	max-width: calc(100% / 7);
+	padding: 0;
+	margin: 0;
+	vertical-align: top;
+	position: relative;
+	overflow: hidden;
+	height: 3.5rem;
+}
+
+@media (min-width: 375px) {
+	.public-calendar .fc-daygrid-view .fc-daygrid-body td {
+		height: 4rem;
+	}
+}
+
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-view .fc-daygrid-body td {
+		height: 4.5rem;
+	}
+}
+
+/* Table rows - height accounts for border-spacing */
+.public-calendar .fc-daygrid-view .fc-daygrid-body tr {
+	height: calc(3.5rem + 0.4rem);
+}
+
+@media (min-width: 375px) {
+	.public-calendar .fc-daygrid-view .fc-daygrid-body tr {
+		height: calc(4rem + 0.5rem);
+	}
+}
+
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-view .fc-daygrid-body tr {
+		height: calc(4.5rem + 0.65rem);
+	}
+}
+
+.public-calendar .fc-daygrid-view .fc-daygrid-day {
+	padding: 0;
+	margin: 0;
+	height: 3.5rem; /* Fixed height to match td */
+	min-height: 3.5rem;
+	max-height: 3.5rem;
+	overflow: hidden;
+	border-radius: var(--pc-day-radius); /* Match frame border-radius for proper clipping */
+}
+
+@media (min-width: 375px) {
+	.public-calendar .fc-daygrid-view .fc-daygrid-day {
+		height: 4rem;
+		min-height: 4rem;
+		max-height: 4rem;
+	}
+}
+
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-view .fc-daygrid-day {
+		height: 4.5rem;
+		min-height: 4.5rem;
+		max-height: 4.5rem;
+	}
+}
+
+/* ============================================
+   Public Calendar - Column Headers
+   ============================================ */
+
+.public-calendar .fc-daygrid-view .fc-col-header-cell {
+	padding-bottom: 0.5rem;
+	font-size: 0.7rem;
+	transition: all 0.2s ease;
+}
+
+.public-calendar .fc-col-header-cell:hover {
+	background-color: #f9fafb;
+}
+
+@media (min-width: 375px) {
+	.public-calendar .fc-daygrid-view .fc-col-header-cell {
+		padding-bottom: 0.625rem;
+		font-size: 0.75rem;
+	}
+}
+
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-view .fc-col-header-cell {
+		padding-bottom: 0.75rem;
+		font-size: 0.875rem;
+	}
+}
+
+/* ============================================
+   Public Calendar - Day Cells
+   ============================================ */
+
+.public-calendar .fc-daygrid-day {
+	background-color: transparent;
+	overflow: hidden; /* Clip background to rounded corners */
+	border-radius: var(--pc-day-radius); /* Match frame border-radius for proper clipping */
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	backface-visibility: hidden;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.public-calendar .fc-daygrid-day:hover {
+	background-color: transparent;
+}
+
+/* Base day frame (overridden by public calendar) */
 .fc-daygrid-day-frame {
-	@apply min-h-[4.5rem] p-1 cursor-pointer overflow-visible;
+	@apply cursor-pointer;
 	box-sizing: border-box;
+	height: 100%;
+	width: 100%;
+	min-height: 0;
+	max-height: 100%;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+
+/* Public calendar day frame styling - fixed size regardless of content */
+.public-calendar .fc-daygrid-day-frame {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 0.125rem;
+	width: 100%;
+	height: 3.5rem; /* Fixed height to match td */
+	min-height: 3.5rem;
+	max-height: 3.5rem;
+	border-radius: var(--pc-day-radius) !important;
+	margin: 0;
+	padding: var(--pc-day-pad);
+	border: 1px solid var(--pc-day-border);
+	background: var(--pc-day-bg);
+	box-shadow: var(--pc-day-shadow);
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+	box-sizing: border-box;
+	overflow: hidden;
+	position: relative;
+	flex-shrink: 0;
+}
+
+@media (min-width: 375px) {
+	.public-calendar .fc-daygrid-day-frame {
+		height: 4rem;
+		min-height: 4rem;
+		max-height: 4rem;
+	}
+}
+
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-day-frame {
+		height: 4.5rem;
+		min-height: 4.5rem;
+		max-height: 4.5rem;
+	}
+}
+
+/* Ensure consistent spacing - no margins or padding on day frame children */
+.public-calendar .fc-daygrid-day-frame > * {
+	margin: 0;
+}
+
+/* Day number styling */
+.fc-daygrid-day-number {
+	@apply text-[0.9375rem] font-medium relative;
+}
+
+.public-calendar .fc-daygrid-day-number {
+	font-size: 0.875rem;
+	font-weight: 700;
+	margin: 0;
+	padding: 0;
+	line-height: 1;
+	color: var(--pc-day-text);
+	transition: inherit;
+	flex-shrink: 0;
+	height: auto;
+}
+
+@media (min-width: 375px) {
+	.public-calendar .fc-daygrid-day-number {
+		font-size: 0.9375rem;
+	}
+}
+
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-day-number {
+		font-size: 1rem;
+	}
+}
+
+/* Status text labels - constrained to not affect frame size */
+.public-calendar .fc-daygrid-day-frame span {
+	line-height: 1;
+	transition: inherit;
+	font-size: 0.625rem;
+	flex-shrink: 0;
+	height: auto;
+	max-height: 0.875rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	width: 100%;
+	text-align: center;
+}
+
+@media (min-width: 640px) {
+	.public-calendar .fc-daygrid-day-frame span {
+		font-size: 0.6875rem;
+		max-height: 1rem;
+	}
+}
+
+/* Mobile touch-friendly sizing */
+@media (max-width: 640px) {
+	.fc-daygrid-day-number {
+		font-size: 0.875rem;
+	}
+}
+
+/* ============================================
+   Public Calendar - Day Status Colors
+   ============================================ */
+
+/* Available days - Green */
+.public-calendar .fc-daygrid-day.fc-day-available {
+	--pc-day-border: #a7f3d0;
+	--pc-day-bg: #ecfdf3;
+	--pc-day-text: #047857;
+	--pc-day-shadow: 0 1px 2px rgba(16, 185, 129, 0.15);
+}
+
+.public-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-frame {
+	border-color: #a7f3d0;
+	background-color: #ecfdf3;
+	color: #047857;
+	border-radius: var(--pc-day-radius);
+}
+
+.public-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-frame:hover {
+	border-color: #10b981;
+	background-color: #d1fae5;
+	box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+	transform: scale(1.05) translateY(-2px);
+}
+
+.public-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-number {
+	color: #047857;
+}
+
+/* Fully booked days - Red */
+.public-calendar .fc-daygrid-day.fc-day-fully-booked {
+	--pc-day-border: #ef4444;
+	--pc-day-bg: #fee2e2;
+	--pc-day-text: #991b1b;
+	--pc-day-shadow: 0 1px 2px rgba(239, 68, 68, 0.15);
+	background-color: transparent;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-fully-booked .fc-daygrid-day-frame {
+	border-color: #ef4444;
+	background-color: #fee2e2;
+	color: #991b1b;
+	border-radius: var(--pc-day-radius);
+	margin: 0;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transform: scale(1);
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.public-calendar .fc-daygrid-day.fc-day-fully-booked:hover {
+	background-color: transparent;
+}
+
+.public-calendar
+	.fc-daygrid-day.fc-day-fully-booked
+	.fc-daygrid-day-frame:hover {
+	background-color: #fecaca;
+	transform: scale(1.05) translateY(-2px);
+	box-shadow: 0 4px 12px 0 rgba(239, 68, 68, 0.25),
+		0 2px 4px 0 rgba(239, 68, 68, 0.1);
+	border-color: #ef4444;
+	z-index: 10;
+	position: relative;
+}
+
+.public-calendar
+	.fc-daygrid-day.fc-day-fully-booked
+	.fc-daygrid-day-frame:active {
+	transform: scale(0.98) translateY(0);
+	transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.public-calendar .fc-daygrid-day.fc-day-fully-booked .fc-daygrid-day-number {
+	color: #991b1b;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.public-calendar
+	.fc-daygrid-day.fc-day-fully-booked
+	.fc-daygrid-day-frame:hover
+	.fc-daygrid-day-number {
+	transform: scale(1.1);
+	color: #7f1d1d;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-fully-booked a {
+	color: #991b1b;
+}
+
+/* Unavailable days - Gray */
+.public-calendar .fc-daygrid-day.fc-day-unavailable {
+	--pc-day-border: #e4e4e7;
+	--pc-day-bg: #f4f4f5;
+	--pc-day-text: #6b7280;
+	--pc-day-shadow: none;
+	background-color: transparent;
+	cursor: default;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-frame {
+	border-color: #e4e4e7;
+	background-color: #f4f4f5;
+	color: #6b7280;
+	border-radius: var(--pc-day-radius);
+	margin: 0;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transform: scale(1);
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	opacity: 0.7;
+	cursor: default;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-unavailable:hover {
+	background-color: transparent;
+}
+
+.public-calendar
+	.fc-daygrid-day.fc-day-unavailable
+	.fc-daygrid-day-frame:hover {
+	background-color: #e4e4e7;
+	transform: scale(1.02);
+	opacity: 0.85;
+	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.public-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-number {
+	color: #6b7280;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.public-calendar
+	.fc-daygrid-day.fc-day-unavailable
+	.fc-daygrid-day-frame:hover
+	.fc-daygrid-day-number {
+	transform: scale(1.05);
+}
+
+.public-calendar .fc-daygrid-day.fc-day-unavailable a {
+	color: #6b7280;
 }
 
 /* Past dates */
+.public-calendar .fc-daygrid-day.fc-day-past {
+	cursor: not-allowed;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-past .fc-daygrid-day-frame {
+	cursor: not-allowed;
+	opacity: 0.5;
+	transform: scale(1);
+	border-radius: var(--pc-day-radius);
+	margin: 0;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-past .fc-daygrid-day-frame:hover {
+	transform: scale(1);
+	box-shadow: none;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-past .fc-daygrid-day-number {
+	color: rgb(161 161 170);
+}
+
+/* Other month dates */
+.fc-day-other-month,
+.fc-daygrid-day.fc-day-other-month {
+	cursor: not-allowed;
+}
+
+.public-calendar .fc-daygrid-day.fc-day-other-month .fc-daygrid-day-frame {
+	cursor: not-allowed;
+	background-color: transparent;
+	opacity: 0.4;
+	border: 2px solid transparent;
+	box-sizing: border-box;
+	border-radius: var(--pc-day-radius);
+	margin: 0;
+}
+
+.public-calendar
+	.fc-daygrid-day.fc-day-other-month
+	.fc-daygrid-day-frame:hover {
+	transform: scale(1);
+	box-shadow: none;
+}
+
+.fc-daygrid-day.fc-day-other-month .fc-daygrid-day-number {
+	color: rgb(161 161 170);
+}
+
+/* ============================================
+   Public Calendar - Today & Selected States
+   ============================================ */
+
+/* Today highlight */
+.public-calendar .fc-daygrid-day.fc-day-today .fc-daygrid-day-frame {
+	border: 2px solid #f59e0b !important;
+	border-radius: var(--pc-day-radius) !important;
+	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.25) !important;
+}
+
+/* Selected date - green border */
+.public-calendar .fc-daygrid-day.fc-day-selected .fc-daygrid-day-frame {
+	border: 2px solid #10b981;
+	border-radius: var(--pc-day-radius) !important;
+	box-shadow: none;
+}
+
+/* Today when selected - green border takes priority */
+.public-calendar
+	.fc-daygrid-day.fc-day-selected.fc-day-today
+	.fc-daygrid-day-frame {
+	border-color: #10b981;
+	border-radius: var(--pc-day-radius) !important;
+	box-shadow: none;
+}
+
+/* Focus states for accessibility */
+.public-calendar .fc-daygrid-day-frame:focus-visible {
+	outline: 2px solid #3b82f6;
+	outline-offset: 2px;
+	border-radius: 0.5rem;
+}
+
+/* ============================================
+   Public Calendar - Events & Animations
+   ============================================ */
+
+/* Hide built-in daygrid events */
+.public-calendar .fc-daygrid-day-events {
+	display: none;
+	height: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.public-calendar .fc-daygrid-day .fc-daygrid-event {
+	display: none;
+}
+
+/* Smooth page transitions */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+	.public-calendar .fc-daygrid-day-frame,
+	.public-calendar .fc-daygrid-day-frame *,
+	.public-calendar .fc-button {
+		transition: none !important;
+		animation: none !important;
+		transform: none !important;
+	}
+}
+
+/* ============================================
+   FullCalendar - Toolbar & Buttons
+   ============================================ */
+
+.fc-toolbar {
+	padding: 1rem 1.5rem;
+	border-bottom: 1px solid #e5e7eb;
+	background: white;
+}
+
+.fc-toolbar-title {
+	@apply text-lg font-semibold text-gray-900;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fc-toolbar-chunk:first-child {
+	@apply flex items-center gap-2;
+}
+
+.fc-toolbar-chunk:last-child {
+	@apply hidden;
+}
+
+/* Weekdays headers */
+.fc-col-header-cell {
+	@apply text-xs font-medium py-3 px-3 text-gray-600 bg-gray-50;
+	border-bottom: 1px solid #e5e7eb;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+/* Date numbers */
+.fc-daygrid-day {
+	@apply border-0 bg-white;
+	box-sizing: border-box;
+	padding: 0;
+	background-color: white;
+	transition: background-color 0.15s ease;
+	overflow: hidden;
+}
+
+.fc-daygrid-day:hover {
+	background-color: #f9fafb;
+}
+
+/* Calendar header buttons */
+.fc .fc-button {
+	@apply text-sm py-1.5 px-3 rounded-lg font-medium transition-all duration-200;
+	background: #111827;
+	color: #ffffff;
+	border: 1px solid #111827;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.15);
+}
+
+.fc .fc-button:hover {
+	background: #0f172a;
+	border-color: #0f172a;
+	box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.25);
+}
+
+.fc .fc-button:active {
+	background: #1f2937;
+}
+
+.fc .fc-button-active {
+	background: #f59e0b;
+	color: white;
+	border-color: #f59e0b;
+}
+
+.fc .fc-button-active:hover {
+	background: #d97706;
+	border-color: #d97706;
+}
+
+.fc-button-group {
+	@apply rounded-lg overflow-hidden;
+	gap: 0.25rem;
+	display: flex;
+}
+
+.fc-button-group .fc-button {
+	border-radius: 0.5rem;
+	margin: 0;
+}
+
+/* Today button */
+.fc .fc-today-button {
+	@apply text-sm py-1.5 px-3 rounded-lg font-medium transition-all duration-200;
+	background: white;
+	color: #374151;
+	border: 1px solid #d1d5db;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.fc .fc-today-button:hover {
+	background: #f9fafb;
+	border-color: #9ca3af;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Navigation buttons */
+.fc .fc-prev-button,
+.fc .fc-next-button {
+	@apply py-1.5 px-3 rounded-lg font-medium transition-all duration-200;
+	background: white;
+	color: #374151;
+	border: 1px solid #d1d5db;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.fc .fc-prev-button:hover,
+.fc .fc-next-button:hover {
+	background: #f9fafb;
+	border-color: #9ca3af;
+	box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Public calendar pill-style controls */
+.public-calendar .fc-toolbar {
+	@apply justify-center;
+}
+
+.public-calendar .fc-toolbar-chunk {
+	display: flex;
+	align-items: center;
+	gap: 0;
+}
+
+.public-calendar .fc-button-group {
+	border: 1px solid #e5e7eb;
+	border-radius: 9999px;
+	overflow: hidden;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	background: #ffffff;
+	gap: 0;
+}
+
+.public-calendar .fc-button-group .fc-button {
+	background: #ffffff;
+	color: #374151;
+	border: none;
+	box-shadow: none;
+	padding: 0.55rem 1.1rem;
+	font-weight: 600;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	transform-origin: center;
+}
+
+.public-calendar .fc-button-group .fc-button:not(:first-child) {
+	border-left: 1px solid #e5e7eb;
+}
+
+.public-calendar .fc-button-group .fc-button:hover {
+	background: #f9fafb;
+	color: #111827;
+	transform: translateY(-1px) scale(1.02);
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
+}
+
+.public-calendar .fc-button-group .fc-button:active {
+	background: #f3f4f6;
+	color: #111827;
+	transform: translateY(0) scale(0.98);
+	transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.public-calendar .fc-button-group .fc-button.fc-button-active {
+	background: #e5e7eb;
+	color: #111827;
+}
+
+.fc-button-primary {
+	background-color: #f59e0b;
+	border-color: #d97706;
+}
+
+.fc-button-primary:hover {
+	background-color: #d97706;
+	border-color: #b45309;
+}
+
+/* ============================================
+   FullCalendar - Events
+   ============================================ */
+
+.fc-event {
+	border: none;
+	border-radius: 0.375rem;
+	padding: 0.25rem 0.5rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	cursor: pointer;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	transition: all 0.15s ease;
+}
+
+.fc-event:hover {
+	box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
+}
+
+.fc-event-title {
+	font-weight: 500;
+	line-height: 1.25;
+}
+
+.fc-daygrid-event {
+	margin: 0.125rem 0.25rem;
+	border-radius: 0.375rem;
+}
+
+/* ============================================
+   Admin Calendar Styles
+   ============================================ */
+
+/* Show view buttons in admin calendar */
+.admin-calendar .fc-toolbar-chunk:last-child {
+	display: flex;
+}
+
+/* Month view: hide built-in daygrid events */
+.admin-calendar .fc-daygrid-day-events {
+	display: none;
+	height: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.admin-calendar .fc-daygrid-day .fc-daygrid-event {
+	display: none;
+}
+
+/* Admin Calendar - Month View: Add spacing between days */
+.admin-calendar .fc-daygrid-view .fc-scrollgrid-section > table {
+	border-spacing: 0.5rem;
+}
+
+.admin-calendar .fc-daygrid-view .fc-daygrid-day {
+	border: none;
+}
+
+/* Admin Calendar - Month View Day Cell Content */
+.admin-calendar .fc-daygrid-day {
+	min-height: 6rem;
+	background-color: white;
+}
+
+@media (min-width: 1024px) {
+	.admin-calendar .fc-daygrid-day {
+		min-height: 7rem;
+	}
+}
+
+.admin-calendar .fc-daygrid-day-frame {
+	padding: 0;
+	overflow: hidden;
+	border: 1px solid #e5e7eb;
+	background-color: white;
+}
+
+.admin-calendar .fc-daygrid-day-content {
+	min-height: 100%;
+	padding: 0;
+}
+
+/* Override public calendar styles for admin calendar */
+.admin-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-frame {
+	@apply bg-transparent;
+}
+
+.admin-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-number {
+	@apply text-zinc-900;
+}
+
+.admin-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-frame {
+	@apply bg-transparent;
+}
+
+.admin-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-number {
+	@apply text-zinc-900;
+}
+
+/* Admin Calendar - Selected date */
+.admin-calendar .fc .fc-daygrid-day.fc-admin-day-selected {
+	@apply cursor-pointer;
+}
+
+.admin-calendar
+	.fc
+	.fc-daygrid-day.fc-admin-day-selected
+	.fc-daygrid-day-frame {
+	border: 2px solid #3b82f6;
+	border-radius: 0;
+	position: relative;
+	cursor: pointer;
+}
+
+.admin-calendar
+	.fc-daygrid-day.fc-day-unavailable.fc-admin-day-selected
+	.fc-daygrid-day-frame {
+	background-color: transparent;
+}
+
+/* Admin Calendar - Today indicator */
+.admin-calendar
+	.fc-daygrid-day.fc-day-today:not(.fc-admin-day-selected)
+	.fc-daygrid-day-frame {
+	border: 2px solid #f59e0b;
+	border-radius: 0;
+	background-color: white;
+	box-shadow: none;
+	display: block;
+	align-items: stretch;
+	justify-content: flex-start;
+	padding: 0;
+}
+
+.admin-calendar .fc-daygrid-day.fc-admin-day-selected .fc-daygrid-day-frame {
+	border: 2px solid #3b82f6;
+	border-radius: 0;
+	background-color: #eff6ff;
+	cursor: pointer;
+}
+
+.admin-calendar
+	.fc-daygrid-day.fc-day-today.fc-admin-day-selected
+	.fc-daygrid-day-frame {
+	border: 2px solid #3b82f6;
+	border-radius: 0;
+	position: relative;
+	cursor: pointer;
+	background-color: #eff6ff;
+}
+
+/* Global today indicator (for non-public calendar contexts) */
+.fc-daygrid-day.fc-day-today:not(.fc-day-selected):not(.fc-day-available)
+	.fc-daygrid-day-frame {
+	@apply bg-amber-50 border-2 border-amber-400 p-1 flex flex-col items-center justify-center cursor-pointer;
+	border-radius: 0;
+}
+
+.fc-daygrid-day.fc-day-today:not(.fc-day-selected):not(.fc-day-available)
+	.fc-daygrid-day-number {
+	@apply text-zinc-900 font-semibold;
+}
+
+/* Today when unavailable (global) */
+.fc-daygrid-day.fc-day-today.fc-day-unavailable .fc-daygrid-day-frame {
+	@apply bg-amber-50 border-2 border-amber-300 p-1 flex flex-col items-center justify-center cursor-pointer;
+	border-radius: 0;
+	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+}
+
+.fc-daygrid-day.fc-day-today.fc-day-unavailable .fc-daygrid-day-number {
+	@apply text-zinc-700 font-semibold;
+}
+
+.fc-daygrid-day.fc-day-today.fc-day-unavailable a {
+	@apply text-zinc-700 cursor-pointer;
+}
+
+/* Past dates (global) */
 .fc-daygrid-day.fc-day-past {
 	@apply cursor-not-allowed;
 }
@@ -131,93 +1090,257 @@ body {
 	@apply text-zinc-400;
 }
 
-/* Available dates - dark gray background, white text */
-.fc-daygrid-day.fc-day-available {
-	@apply bg-transparent cursor-pointer;
+/* ============================================
+   Admin Calendar - Day Cell Component Styles
+   ============================================ */
+
+.admin-day-cell {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
+	padding: 0.375rem 0.5rem;
+	box-sizing: border-box;
+	position: relative;
 }
 
-.fc-daygrid-day.fc-day-available .fc-daygrid-day-frame {
-	@apply bg-zinc-800 p-1 flex flex-col items-center justify-center cursor-pointer;
-	border-radius: 0;
+/* Day number */
+.admin-day-number {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: #1f2937;
+	position: absolute;
+	top: 0.25rem;
+	right: 0.25rem;
+	line-height: 1;
+	z-index: 10;
 }
 
-.fc-daygrid-day.fc-day-available .fc-daygrid-day-number {
-	@apply text-white font-medium;
+.admin-day-number-today {
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 9999px;
+	background-color: #f59e0b;
+	color: #ffffff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-/* Label styling for available days - ensure labels are visible */
-.fc-daygrid-day.fc-day-available .text-green-600 {
-	@apply text-green-600;
+/* Day status (working hours / not available) */
+.admin-day-status {
+	position: absolute;
+	top: 1.75rem;
+	right: 0.25rem;
+	z-index: 10;
+	width: auto;
+	min-width: fit-content;
+	text-align: right;
 }
 
-.fc-daygrid-day.fc-day-available .bg-green-50 {
-	@apply bg-green-100;
+.admin-day-working-hours {
+	font-size: 0.625rem;
+	font-weight: 500;
+	color: #059669;
+	line-height: 1.2;
+	white-space: nowrap;
+	display: block;
+	width: 100%;
+	text-align: right;
+	margin: 0;
+	padding: 0;
 }
 
-.fc-daygrid-day.fc-day-available .fc-daygrid-day-top {
-	@apply hidden;
+.admin-day-closed {
+	font-size: 0.625rem;
+	font-weight: 500;
+	color: #dc2626;
+	line-height: 1.2;
+	white-space: nowrap;
+	display: block;
+	width: 100%;
+	text-align: right;
+	margin: 0;
+	padding: 0;
 }
 
-/* Ensure badges are visible in day cells */
-.fc-daygrid-day-frame > div {
-	@apply overflow-visible;
+.admin-day-past {
+	opacity: 0.6;
 }
 
-.fc-daygrid-day.fc-day-available a {
-	@apply text-white cursor-pointer;
+/* Appointment count badge (mobile only) */
+.admin-day-appointment-count-mobile {
+	position: absolute;
+	bottom: 0.25rem;
+	right: 0.25rem;
+	background-color: #3b82f6;
+	color: white;
+	border-radius: 0.75rem;
+	width: 1.25rem;
+	height: 1.25rem;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.625rem;
+	font-weight: 600;
+	line-height: 1;
+	z-index: 10;
 }
 
-/* Today when available - override with amber background */
-.fc-daygrid-day.fc-day-today.fc-day-available .fc-daygrid-day-frame {
-	@apply bg-amber-50 border-2 border-amber-500 p-1 flex flex-col items-center justify-center cursor-pointer;
-	border-radius: 0;
-	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3) !important;
+/* Day events container */
+.admin-day-events {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	min-height: 0;
+	overflow: hidden;
+	margin-top: 2.6rem;
 }
 
-.fc-daygrid-day.fc-day-today.fc-day-available .fc-daygrid-day-number {
-	@apply text-zinc-900 font-semibold;
+/* Appointment bubbles */
+.admin-day-appointment-bubble {
+	border-radius: 0.375rem;
+	padding: 0.125rem 0.5rem;
+	font-size: 0.625rem;
+	font-weight: 500;
+	border-width: 1px;
+	line-height: 1.3;
+	transition: all 0.15s ease;
+	cursor: pointer;
+	min-height: 1.5rem;
+	max-height: 1.5rem;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
 }
 
-.fc-daygrid-day.fc-day-today.fc-day-available a {
-	@apply text-zinc-900 cursor-pointer;
+.admin-day-appointment-bubble:hover {
+	opacity: 0.85;
+	transform: translateY(-0.5px);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Selected date - red border only (Public Calendar) */
-.fc .fc-daygrid-day.fc-day-selected {
-	@apply cursor-pointer;
+.admin-day-appointment-content {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.375rem;
+	width: 100%;
+	white-space: nowrap;
 }
 
-/* Selected date - red border only, must override available styles, placed AFTER available styles for specificity (Public Calendar) */
-.fc .fc-daygrid-day.fc-day-selected .fc-daygrid-day-frame {
-	border: 2px solid #ef4444 !important; /* red-500 */
-	border-radius: 0 !important;
-	position: relative !important;
-	cursor: pointer !important;
+.admin-day-appointment-title {
+	flex: 1;
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-/* Admin Calendar - Selected date */
-.admin-calendar .fc .fc-daygrid-day.fc-admin-day-selected {
-	@apply cursor-pointer;
+.admin-day-appointment-time {
+	flex-shrink: 0;
+	font-weight: 500;
+	font-size: 0.5625rem;
 }
 
-.admin-calendar
-	.fc
-	.fc-daygrid-day.fc-admin-day-selected
-	.fc-daygrid-day-frame {
-	border: 2px solid #3b82f6 !important; /* blue-500 */
-	border-radius: 0 !important;
-	position: relative !important;
-	cursor: pointer !important;
+/* More events indicator */
+.admin-day-more-events {
+	margin-top: 0.125rem;
+	padding-left: 0.125rem;
+	font-size: 0.625rem;
+	font-weight: 500;
+	color: #6b7280;
 }
 
-/* Selected date - ensure labels remain visible with red border */
-/* Label colors are handled inline in the component */
+/* Legacy support for FullCalendar classes */
+.admin-calendar .fc-appointment-bubble {
+	line-height: 1.3;
+	transition: all 0.15s ease;
+	cursor: pointer;
+	min-height: 1.5rem;
+	display: flex;
+	align-items: center;
+}
+
+.admin-calendar .fc-appointment-bubble:hover {
+	opacity: 0.85;
+	transform: translateY(-0.5px);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.admin-calendar .fc-more-events {
+	margin-top: 0.125rem;
+	padding-left: 0.125rem;
+	font-weight: 500;
+}
+
+/* Today's date highlight */
+.admin-calendar .fc-daygrid-day-number {
+	transition: all 0.2s ease;
+	font-weight: 600;
+	color: #1f2937;
+	margin-bottom: 0.375rem;
+	line-height: 1;
+}
+
+.admin-calendar .fc-day-events {
+	overflow-y: auto;
+	scrollbar-width: none;
+	-ms-overflow-style: none;
+}
+
+.admin-calendar .fc-day-events::-webkit-scrollbar {
+	display: none;
+}
+
+.admin-calendar .fc-day-info {
+	font-size: 0.625rem;
+	line-height: 1.2;
+}
+
+.admin-calendar .fc-working-hours {
+	color: #059669;
+	font-weight: 600;
+	font-size: 0.625rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.admin-calendar .fc-appointment-count {
+	color: #b45309;
+	font-weight: 600;
+}
+
+.admin-calendar .fc-appointment-badge {
+	background-color: #fef3c7;
+	color: #92400e;
+	padding: 0.125rem 0.375rem;
+	border-radius: 0.25rem;
+	font-weight: 700;
+	font-size: 0.625rem;
+	min-width: 1.25rem;
+	text-align: center;
+	display: inline-block;
+}
+
+.admin-calendar .fc-closed {
+	color: #dc2626;
+	font-weight: 600;
+	font-size: 0.625rem;
+}
 
 /* Hide status text on mobile */
 @media (max-width: 639px) {
 	.fc-day-status-text,
 	.fc-day-not-available-text {
-		display: none !important;
+		display: none;
+	}
+	.admin-day-number-today {
+		background-color: transparent;
 	}
 }
 
@@ -225,186 +1348,297 @@ body {
 @media (min-width: 640px) {
 	.fc-day-status-text,
 	.fc-day-not-available-text {
-		display: block !important;
+		display: block;
 	}
 }
 
-/* Not available dates */
-.fc-daygrid-day.fc-day-unavailable {
-	@apply bg-transparent cursor-not-allowed;
-}
+/* ============================================
+   Admin Calendar - Responsive Mobile
+   ============================================ */
 
-.fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-frame {
-	@apply bg-transparent p-1 flex flex-col items-center justify-center cursor-not-allowed;
-}
+@media (max-width: 640px) {
+	/* Month view: clean minimal layout */
+	.admin-calendar .fc-daygrid-view .fc-scrollgrid-section > table {
+		border-spacing: 0.375rem;
+	}
+	.admin-calendar .fc-daygrid-day {
+		min-height: 3.5rem;
+	}
+	.admin-calendar .fc-daygrid-day-frame {
+		background-color: #f3f4f6;
+		border: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.admin-day-cell {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		width: 100%;
+		height: 100%;
+	}
+	.admin-day-number {
+		position: static;
+		font-size: 0.9375rem;
+		font-weight: 500;
+		color: #374151;
+		width: auto;
+		height: auto;
+	}
+	.admin-day-status,
+	.admin-day-events,
+	.admin-day-appointment-count-mobile {
+		display: none;
+	}
+	/* Selected day: amber background */
+	.admin-calendar .fc-daygrid-day.fc-admin-day-selected .fc-daygrid-day-frame {
+		background-color: #f59e0b;
+	}
+	.admin-calendar .fc-daygrid-day.fc-admin-day-selected .admin-day-number {
+		color: white;
+		font-weight: 600;
+	}
+	/* Unavailable days when selected: keep gray background, no amber */
+	.admin-calendar
+		.fc-daygrid-day.fc-day-unavailable.fc-admin-day-selected
+		.fc-daygrid-day-frame {
+		background-color: #f3f4f6;
+	}
+	.admin-calendar
+		.fc-daygrid-day.fc-day-unavailable.fc-admin-day-selected
+		.admin-day-number {
+		color: #374151;
+		font-weight: 500;
+	}
+	/* Today: amber border, white background */
+	.admin-calendar
+		.fc-daygrid-day.fc-day-today:not(.fc-admin-day-selected)
+		.fc-daygrid-day-frame {
+		background-color: white;
+		border: 2px solid #f59e0b;
+	}
+	.admin-calendar
+		.fc-daygrid-day.fc-day-today:not(.fc-admin-day-selected)
+		.admin-day-number {
+		color: #f59e0b;
+		background-color: transparent;
+		width: auto;
+		height: auto;
+		border-radius: 0;
+	}
 
-.fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-number {
-	@apply text-zinc-400 opacity-60;
-}
+	/* Week view: horizontal scroll, hide time slot events */
+	.admin-calendar .fc-timeGridWeek-view .fc-scrollgrid {
+		overflow-x: auto;
+		overflow-y: auto;
+	}
+	.admin-calendar .fc-timeGridWeek-view .fc-timegrid-col,
+	.admin-calendar .fc-timeGridWeek-view .fc-col-header-cell {
+		min-width: 8rem;
+	}
+	.admin-calendar .fc-timeGridWeek-view .fc-col-header-cell {
+		font-size: 0.625rem;
+		padding: 0.5rem 0.375rem;
+	}
+	.admin-calendar .fc-timeGridWeek-view .admin-calendar-event--time {
+		display: none;
+	}
 
-.fc-daygrid-day.fc-day-unavailable a {
-	@apply text-zinc-400 cursor-not-allowed;
-}
+	/* Day view: show appointments, optimize layout */
+	.admin-calendar .fc-timeGridDay-view .fc-timegrid-slot-label {
+		padding: 0 0.375rem;
+		font-size: 0.75rem;
+	}
+	.admin-calendar .fc-timeGridDay-view .fc-timegrid-event {
+		font-size: 0.8125rem;
+		padding: 0.25rem 0.375rem;
+	}
 
-/* Calendar header buttons */
-.fc .fc-button {
-	@apply text-sm py-2 px-4 rounded-md font-medium text-white shadow-lg transition-all duration-300;
-	background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706) !important;
-	border: none !important;
-}
-
-.fc .fc-button:hover {
-	background: linear-gradient(to right, #f59e0b, #d97706, #b45309) !important;
-	box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3),
-		0 4px 6px -2px rgba(245, 158, 11, 0.2) !important;
-	transform: scale(1.05);
-}
-
-.fc .fc-button:active {
-	transform: scale(0.95);
-}
-
-.fc-button-group {
-	@apply rounded-md overflow-hidden;
-}
-
-/* Today button */
-.fc .fc-today-button {
-	@apply text-sm py-2 px-4 rounded-md font-medium text-white shadow-lg transition-all duration-300;
-	background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706) !important;
-	border: none !important;
-}
-
-.fc .fc-today-button:hover {
-	background: linear-gradient(to right, #f59e0b, #d97706, #b45309) !important;
-	box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3),
-		0 4px 6px -2px rgba(245, 158, 11, 0.2) !important;
-	transform: scale(1.05);
-}
-
-.fc .fc-today-button:active {
-	transform: scale(0.95);
-}
-
-/* Navigation buttons */
-.fc .fc-prev-button,
-.fc .fc-next-button {
-	@apply py-2 px-3 text-white shadow-lg transition-all duration-300;
-	background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706) !important;
-	border: none !important;
-}
-
-.fc .fc-prev-button:hover,
-.fc .fc-next-button:hover {
-	background: linear-gradient(to right, #f59e0b, #d97706, #b45309) !important;
-	box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3),
-		0 4px 6px -2px rgba(245, 158, 11, 0.2) !important;
-	transform: scale(1.05);
-}
-
-.fc .fc-prev-button:active,
-.fc .fc-next-button:active {
-	transform: scale(0.95);
-}
-
-/* Today indicator - border and background for all today dates (only if not selected and not available) */
-.fc-daygrid-day.fc-day-today:not(.fc-day-selected):not(.fc-day-available)
-	.fc-daygrid-day-frame {
-	@apply bg-amber-50 border-2 border-amber-400 p-1 flex flex-col items-center justify-center cursor-pointer;
-	border-radius: 0;
-	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3) !important;
-}
-
-.fc-daygrid-day.fc-day-today:not(.fc-day-selected):not(.fc-day-available)
-	.fc-daygrid-day-number {
-	@apply text-zinc-900 font-semibold;
-}
-
-/* Admin Calendar - Today when selected */
-.admin-calendar
-	.fc-daygrid-day.fc-day-today.fc-admin-day-selected
-	.fc-daygrid-day-frame {
-	border: 2px solid #3b82f6 !important; /* blue-500, 2px */
-	border-radius: 0 !important;
-	position: relative !important;
-	cursor: pointer !important;
-}
-
-/* Today when unavailable - make it clickable with subtle styling */
-.fc-daygrid-day.fc-day-today.fc-day-unavailable .fc-daygrid-day-frame {
-	@apply bg-amber-50 border-2 border-amber-300 p-1 flex flex-col items-center justify-center cursor-pointer;
-	border-radius: 0;
-	box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2) !important;
-}
-
-.fc-daygrid-day.fc-day-today.fc-day-unavailable .fc-daygrid-day-number {
-	@apply text-zinc-700 font-semibold;
-}
-
-.fc-daygrid-day.fc-day-today.fc-day-unavailable a {
-	@apply text-zinc-700 cursor-pointer;
-}
-
-/* Button active state */
-.fc-button-primary {
-	background-color: #f59e0b !important;
-	border-color: #d97706 !important;
-}
-
-.fc-button-primary:hover {
-	background-color: #d97706 !important;
-	border-color: #b45309 !important;
-}
-
-.fc-event {
-	border-color: #d97706 !important;
-}
-
-.fc-toolbar-chunk:first-child {
-	@apply flex items-center gap-2;
-}
-
-.fc-toolbar-chunk:last-child {
-	@apply hidden;
+	/* Toolbar */
+	.admin-calendar .fc-toolbar {
+		@apply flex-col gap-y-2 px-3 py-2;
+	}
+	.admin-calendar .fc-toolbar-chunk {
+		@apply flex flex-wrap w-full;
+	}
+	.admin-calendar .fc-toolbar-chunk:nth-child(3) {
+		@apply order-1 justify-center;
+	}
+	.admin-calendar .fc-toolbar-chunk:nth-child(2) {
+		@apply order-2 justify-center;
+	}
+	.admin-calendar .fc-toolbar-chunk:nth-child(1) {
+		@apply order-3 justify-center;
+	}
+	.admin-calendar-legend-services {
+		display: none;
+	}
 }
 
 /* ============================================
-   Admin Calendar Styles
+   TimeGrid View Styles (Day/Week)
    ============================================ */
 
-/* Override public calendar styles for admin calendar */
-.admin-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-frame {
-	/* Admin calendar uses background events, so we don't need the dark gray background */
-	@apply bg-transparent;
+/* TimeGrid slot styling */
+.fc-timegrid-slot {
+	height: 2.5em;
+	border-bottom: 1px solid #e5e7eb;
 }
 
-.admin-calendar .fc-daygrid-day.fc-day-available .fc-daygrid-day-number {
-	/* Admin calendar uses background events, so we don't need white text */
-	@apply text-zinc-900;
+.fc-timegrid-slot-label {
+	padding: 0 0.5em;
+	font-size: 0.875rem;
+	color: #6b7280;
 }
 
-.admin-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-frame {
-	/* Admin calendar uses background events, so we don't need transparent background styling */
-	@apply bg-transparent;
+/* TimeGrid column headers */
+.fc-timegrid-col {
+	border-right: 1px solid #e5e7eb;
 }
 
-.admin-calendar .fc-daygrid-day.fc-day-unavailable .fc-daygrid-day-number {
-	/* Admin calendar uses background events, so we don't need the muted styling */
-	@apply text-zinc-900;
+.fc-timegrid-col.fc-timegrid-col-today {
+	background-color: #fef3c7;
 }
 
-/* Admin Calendar - Today indicator (doesn't need the same amber styling as public) */
+/* TimeGrid events */
+.fc-timegrid-event {
+	border-radius: 4px;
+	padding: 2px 4px;
+	font-size: 0.875rem;
+	cursor: pointer;
+}
+
+.fc-timegrid-event:hover {
+	opacity: 0.9;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.fc-timegrid-event .fc-event-title {
+	font-weight: 500;
+	padding: 2px 0;
+}
+
+/* TimeGrid now indicator */
+.fc-timegrid-now-indicator-line {
+	border-color: #ef4444;
+	border-width: 2px;
+}
+
+.fc-timegrid-now-indicator-arrow {
+	border-color: #ef4444;
+}
+
+/* TimeGrid background events (working hours) */
+.fc-timegrid-event.fc-event-mirror,
+.fc-timegrid-event[data-display='background'] {
+	opacity: 0.3;
+}
+
+/* Ensure proper spacing in day view */
+.fc-timeGrid-view .fc-scrollgrid {
+	border-spacing: 0;
+}
+
+.fc-timeGrid-view .fc-daygrid-body {
+	overflow: visible;
+}
+
+/* Fix day view column width */
+.fc-timeGridDay-view .fc-timegrid-col {
+	min-width: 100%;
+}
+
+/* Week view: desktop columns */
+.fc-timeGridWeek-view .fc-timegrid-col {
+	min-width: 14.28%;
+}
+
+/* Ensure events are visible and properly sized */
+.fc-timegrid-event-harness {
+	position: absolute;
+}
+
+.fc-timegrid-event-harness-inset .fc-timegrid-event {
+	left: 2px;
+	right: 2px;
+	margin: 0;
+}
+
+/* Admin calendar: default overflow for timegrid events */
+.admin-calendar .fc-timegrid-event-harness {
+	overflow: hidden;
+}
+
+/* ============================================
+   Admin Calendar - Toolbar & Event Refinements
+   ============================================ */
+
+/* Better spacing & balance for admin header toolbar */
+.admin-calendar .fc-toolbar {
+	@apply flex items-center justify-between gap-4 px-6 py-4;
+}
+
+.admin-calendar .fc-toolbar-chunk {
+	@apply flex items-center gap-2;
+}
+
+.admin-calendar .fc-toolbar-chunk:nth-child(2) {
+	@apply flex-1 justify-center;
+}
+
+/* Appointment events: consistent typography & layout */
+.admin-calendar .admin-calendar-event {
+	@apply text-[11px] leading-tight;
+}
+
+.admin-calendar .admin-calendar-event--month {
+	@apply text-[10px];
+}
+
+.admin-calendar .admin-calendar-event--time {
+	@apply text-[11px];
+}
+
+/* Background availability blocks should not intercept clicks */
+.admin-calendar .admin-calendar-event--background {
+	pointer-events: none;
+}
+
+/* Subtle but visible "now" indicator in admin calendar */
+.admin-calendar .fc-timegrid-now-indicator-line {
+	border-width: 1px;
+	opacity: 0.75;
+}
+
+.admin-calendar .fc-timegrid-now-indicator-arrow {
+	opacity: 0.75;
+}
+
+/* TimeGrid: differentiate past / current / future slots */
 .admin-calendar
-	.fc-daygrid-day.fc-day-today:not(.fc-admin-day-selected)
-	.fc-daygrid-day-frame {
-	@apply border-2 border-amber-400;
-	border-radius: 0 !important;
+	.fc-timegrid-slot.fc-timegrid-slot-lane.fc-past:not(.fc-timegrid-slot-minor) {
+	@apply bg-gray-50;
 }
 
-/* Ensure admin calendar selected date uses blue border */
-.admin-calendar .fc-daygrid-day.fc-admin-day-selected .fc-daygrid-day-frame {
-	border: 2px solid #3b82f6 !important; /* blue-500 */
-	border-radius: 0 !important;
-	background-color: #eff6ff !important; /* blue-50 */
-	cursor: pointer !important;
+.admin-calendar
+	.fc-timegrid-slot.fc-timegrid-slot-lane.fc-now:not(.fc-timegrid-slot-minor) {
+	@apply bg-amber-50/60;
+}
+
+.admin-calendar
+	.fc-timegrid-slot.fc-timegrid-slot-lane.fc-future:not(
+		.fc-timegrid-slot-minor
+	) {
+	@apply bg-white;
+}
+
+/* Hover & selection feedback for time slots */
+.admin-calendar .fc-timegrid-slot.fc-timegrid-slot-lane:hover {
+	@apply bg-gray-50;
+}
+
+.admin-calendar .fc-highlight {
+	@apply bg-amber-100/60;
 }
