@@ -10,7 +10,7 @@ export const siteConfig = {
 	description_2: 'Precision.',
 	description_3: 'Flow.',
 	location: 'Amsterdam',
-	address: 'Warmoesstraat 155, floor 4, Amsterdam',
+	address: 'Warmoesstraat 155, floor 3, Amsterdam',
 	email: 'yuri.prodjhair@gmail.com',
 	phone: '+31620991336',
 	whatsapp: 'https://wa.me/31620991336',
@@ -23,8 +23,7 @@ export const navigation = {
 		{ label: 'Services', href: '#services' },
 	],
 	footer: [
-		{ label: 'Privacy', href: '#' },
-		{ label: 'Terms', href: '#' },
-		{ label: 'Support', href: '#' },
+		{ label: 'Privacy', href: '/privacy' },
+		{ label: 'Terms', href: '/terms' },
 	],
 } as const

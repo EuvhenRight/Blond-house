@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useEffect, useState } from 'react'
 import { ZodError } from 'zod'
@@ -22,6 +23,7 @@ interface FieldErrors {
 	serviceId?: string
 	date?: string
 	time?: string
+	dataConsent?: string
 }
 
 export default function BookingForm({
@@ -38,9 +40,9 @@ export default function BookingForm({
 		date: selectedDate || '',
 		time: selectedTime || '',
 	})
+	const [dataConsent, setDataConsent] = useState(false)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-	const [success, setSuccess] = useState(false)
 	const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
 
 	// Update form data when service is selected from prop
@@ -65,15 +67,21 @@ export default function BookingForm({
 	useEffect(() => {
 		if (selectedDate) {
 			setFormData(prev => ({ ...prev, date: selectedDate }))
-			if (fieldErrors.date) {
-				setFieldErrors(prev => ({ ...prev, date: undefined }))
-			}
+			setFieldErrors(prev => {
+				if (prev.date) {
+					return { ...prev, date: undefined }
+				}
+				return prev
+			})
 		}
 		if (selectedTime) {
 			setFormData(prev => ({ ...prev, time: selectedTime }))
-			if (fieldErrors.time) {
-				setFieldErrors(prev => ({ ...prev, time: undefined }))
-			}
+			setFieldErrors(prev => {
+				if (prev.time) {
+					return { ...prev, time: undefined }
+				}
+				return prev
+			})
 		}
 	}, [selectedDate, selectedTime])
 
@@ -94,6 +102,7 @@ export default function BookingForm({
 				time: formData.time || '',
 				serviceName: formData.serviceName,
 				duration: formData.duration,
+				dataConsent: dataConsent,
 			}
 
 			const validatedData = bookingFormSchema.parse(validationData)
@@ -154,43 +163,6 @@ export default function BookingForm({
 		)
 	}
 
-	if (success) {
-		return (
-			<div
-				className='text-center py-8 sm:py-12'
-				role='status'
-				aria-live='polite'
-				aria-atomic='true'
-			>
-				<div
-					className='inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 mb-4 animate-in fade-in zoom-in duration-500'
-					aria-hidden='true'
-				>
-					<svg
-						className='w-8 h-8 sm:w-10 sm:h-10 text-green-600'
-						fill='none'
-						stroke='currentColor'
-						viewBox='0 0 24 24'
-						aria-hidden='true'
-					>
-						<path
-							strokeLinecap='round'
-							strokeLinejoin='round'
-							strokeWidth={2.5}
-							d='M5 13l4 4L19 7'
-						/>
-					</svg>
-				</div>
-				<h3 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-2'>
-					Booking Confirmed!
-				</h3>
-				<p className='text-sm sm:text-base text-zinc-600 max-w-md mx-auto'>
-					Your appointment has been confirmed. A confirmation email has been
-					sent to your email address.
-				</p>
-			</div>
-		)
-	}
 
 	return (
 		<form
@@ -205,10 +177,10 @@ export default function BookingForm({
 				role='region'
 				aria-label='Selected appointment details'
 			>
-				<h3 className='font-semibold text-base sm:text-lg text-zinc-900 mb-3'>
+				<h4 className='font-semibold text-zinc-900 mb-3'>
 					Selected Appointment
-				</h3>
-				<dl className='space-y-2 text-sm sm:text-base'>
+				</h4>
+				<dl className='space-y-2'>
 					<div>
 						<dt className='font-medium text-zinc-700 inline'>Date:</dt>{' '}
 						<dd className='text-zinc-800 inline'>
@@ -253,7 +225,7 @@ export default function BookingForm({
 				>
 					<div className='flex items-start gap-2'>
 						<svg
-							className='w-5 h-5 mt-0.5 flex-shrink-0'
+							className='w-5 h-5 mt-0.5 shrink-0'
 							fill='none'
 							stroke='currentColor'
 							viewBox='0 0 24 24'
@@ -309,10 +281,12 @@ export default function BookingForm({
 					aria-describedby={
 						fieldErrors.customerName ? 'customerName-error' : undefined
 					}
-					className={`w-full px-4 py-3 sm:py-3.5 border rounded-lg text-base focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors min-h-[48px] ${
+					className={`w-full px-4 py-3 sm:py-3.5 ring-1 rounded-lg text-base transition-colors min-h-[48px] outline-none ${
 						fieldErrors.customerName
-							? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-							: 'border-zinc-300'
+							? 'ring-red-500 focus:ring-1 focus:ring-red-500'
+							: formData.customerName
+								? 'ring-amber-300 focus:ring-1 focus:ring-amber-500'
+								: 'ring-zinc-300 focus:ring-1 focus:ring-amber-500'
 					}`}
 					placeholder='John Doe'
 				/>
@@ -323,7 +297,7 @@ export default function BookingForm({
 						role='alert'
 					>
 						<svg
-							className='w-4 h-4 flex-shrink-0'
+							className='w-4 h-4 shrink-0'
 							fill='none'
 							stroke='currentColor'
 							viewBox='0 0 24 24'
@@ -369,10 +343,12 @@ export default function BookingForm({
 					aria-describedby={
 						fieldErrors.customerEmail ? 'customerEmail-error' : undefined
 					}
-					className={`w-full px-4 py-3 sm:py-3.5 border rounded-lg text-base focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors min-h-[48px] ${
+					className={`w-full px-4 py-3 sm:py-3.5 ring-1 rounded-lg text-base transition-colors min-h-[48px] outline-none ${
 						fieldErrors.customerEmail
-							? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-							: 'border-zinc-300'
+							? 'ring-red-500 focus:ring-1 focus:ring-red-500'
+							: formData.customerEmail
+								? 'ring-amber-300 focus:ring-1 focus:ring-amber-500'
+								: 'ring-zinc-300 focus:ring-1 focus:ring-amber-500'
 					}`}
 					placeholder='john@example.com'
 				/>
@@ -383,7 +359,7 @@ export default function BookingForm({
 						role='alert'
 					>
 						<svg
-							className='w-4 h-4 flex-shrink-0'
+							className='w-4 h-4 shrink-0'
 							fill='none'
 							stroke='currentColor'
 							viewBox='0 0 24 24'
@@ -431,10 +407,12 @@ export default function BookingForm({
 							? 'customerPhone-error'
 							: 'customerPhone-hint'
 					}
-					className={`w-full px-4 py-3 sm:py-3.5 border rounded-lg text-base focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors min-h-[48px] ${
+					className={`w-full px-4 py-3 sm:py-3.5 ring-1 rounded-lg text-base transition-colors min-h-[48px] outline-none ${
 						fieldErrors.customerPhone
-							? 'border-red-500 focus:ring-red-500 focus:border-red-500'
-							: 'border-zinc-300'
+							? 'ring-red-500 focus:ring-1 focus:ring-red-500'
+							: formData.customerPhone
+								? 'ring-amber-300 focus:ring-1 focus:ring-amber-500'
+								: 'ring-zinc-300 focus:ring-1 focus:ring-amber-500'
 					}`}
 					placeholder='+31 6 12345678'
 				/>
@@ -445,7 +423,7 @@ export default function BookingForm({
 						role='alert'
 					>
 						<svg
-							className='w-4 h-4 flex-shrink-0'
+							className='w-4 h-4 shrink-0'
 							fill='none'
 							stroke='currentColor'
 							viewBox='0 0 24 24'
@@ -468,16 +446,94 @@ export default function BookingForm({
 				)}
 			</div>
 
+			{/* GDPR Data Consent Checkbox */}
+			<div className='mb-4 sm:mb-6'>
+				<div className='flex items-start gap-3'>
+					<input
+						type='checkbox'
+						id='dataConsent'
+						name='dataConsent'
+						checked={dataConsent}
+						onChange={e => {
+							setDataConsent(e.target.checked)
+							if (fieldErrors.dataConsent) {
+								setFieldErrors(prev => ({ ...prev, dataConsent: undefined }))
+							}
+						}}
+						aria-required='true'
+						aria-invalid={fieldErrors.dataConsent ? 'true' : 'false'}
+						aria-describedby={
+							fieldErrors.dataConsent ? 'dataConsent-error' : 'dataConsent-hint'
+						}
+						className={`mt-1 w-5 h-5 rounded ring-1 transition-colors outline-none focus:ring-1 focus:ring-amber-500 ${
+							fieldErrors.dataConsent
+								? 'ring-red-500 accent-red-500'
+								: dataConsent
+									? 'ring-amber-300 accent-amber-500'
+									: 'ring-zinc-300 accent-amber-500'
+						}`}
+					/>
+					<label
+						htmlFor='dataConsent'
+						className='flex-1 text-xs sm:text-sm text-zinc-700 leading-relaxed cursor-pointer'
+					>
+						I agree to the processing of my personal data in accordance with the{' '}
+						<Link
+							href='/privacy'
+							target='_blank'
+							rel='noopener noreferrer'
+							className='text-amber-600 hover:text-amber-700 underline font-medium'
+							onClick={(e: React.MouseEvent<HTMLAnchorElement>) => e.stopPropagation()}
+						>
+							Privacy Policy
+						</Link>
+						.{' '}
+						<span className='text-red-600' aria-label='required'>
+							*
+						</span>
+					</label>
+				</div>
+				{fieldErrors.dataConsent && (
+					<p
+						id='dataConsent-error'
+						className='mt-2 text-xs text-red-600 flex items-center gap-1.5'
+						role='alert'
+					>
+						<svg
+							className='w-4 h-4 shrink-0'
+							fill='none'
+							stroke='currentColor'
+							viewBox='0 0 24 24'
+							aria-hidden='true'
+						>
+							<path
+								strokeLinecap='round'
+								strokeLinejoin='round'
+								strokeWidth={2}
+								d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+							/>
+						</svg>
+						{fieldErrors.dataConsent}
+					</p>
+				)}
+				{!fieldErrors.dataConsent && (
+					<p id='dataConsent-hint' className='mt-2 text-[10px] sm:text-xs text-zinc-500'>
+						Required for GDPR compliance. Your data will be used solely for appointment
+						management and communication.
+					</p>
+				)}
+			</div>
+
 			<button
 				type='submit'
-				disabled={isSubmitting || !selectedServiceId}
+				disabled={isSubmitting || !selectedServiceId || !dataConsent}
 				aria-busy={isSubmitting}
-				aria-disabled={isSubmitting || !selectedServiceId}
-				className='group relative w-full overflow-hidden rounded-lg bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg min-h-[48px] sm:min-h-[52px] flex items-center justify-center'
+				aria-disabled={isSubmitting || !selectedServiceId || !dataConsent}
+				className='group relative w-full overflow-hidden rounded-lg bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 px-6 py-3.5 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-amber-500/50 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg min-h-[48px] sm:min-h-[52px] flex items-center justify-center'
 			>
 				{/* Shimmer animation overlay */}
 				<span
-					className='absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out'
+					className='absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out'
 					aria-hidden='true'
 				/>
 				{/* Glow effect */}
@@ -513,13 +569,14 @@ export default function BookingForm({
 				</span>
 			</button>
 
-			<p className='text-xs sm:text-sm text-zinc-500 text-center mt-4 sm:mt-6 leading-relaxed'>
-				* Additional charges may apply for certain services—please consult with
-				your stylist.
-				<br className='hidden sm:block' />
-				<span className='block sm:inline'> </span>* All services include
-				shampoo, styling, and blow-dry in the desired direction.
-			</p>
+			<div className='mt-4 sm:mt-6'>
+				<p className='text-[10px] sm:text-xs text-zinc-500 text-left leading-relaxed max-w-full'>
+					* Additional charges may apply for certain services—please consult with your stylist.
+				</p>
+				<p className='text-[10px] sm:text-xs text-zinc-500 text-left leading-relaxed max-w-full mt-2'>
+					* All services include shampoo, styling, and blow-dry in the desired direction.
+				</p>
+			</div>
 		</form>
 	)
 }

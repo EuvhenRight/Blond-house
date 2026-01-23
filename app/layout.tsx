@@ -38,9 +38,9 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang='en'>
+		<html lang='en' className='overflow-x-hidden'>
 			<body
-				className={`${plusJakartaSans.variable} antialiased bg-linear-to-r from-amber-50 via-white to-amber-150 text-zinc-900 min-h-screen`}
+				className={`${plusJakartaSans.variable} antialiased bg-linear-to-r from-amber-50 via-white to-amber-250 text-zinc-900 min-h-screen overflow-x-hidden`}
 			>
 				<Providers>
 					<Header />

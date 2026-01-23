@@ -45,6 +45,11 @@ export const bookingFormSchema = z.object({
 		.string()
 		.min(1, 'Time is required')
 		.regex(/^\d{2}:\d{2}$/, 'Invalid time format (use HH:MM)'),
+	dataConsent: z
+		.boolean()
+		.refine((val) => val === true, {
+			message: 'You must agree to the privacy policy to continue',
+		}),
 })
 
 // Admin appointment form validation schema (email and phone optional)

@@ -11,7 +11,7 @@ export async function getCurrentUser() {
 
 export async function requireAdmin() {
 	const session = await getSession()
-	if (!session || (session.user as any)?.role !== 'admin') {
+	if (!session || session.user?.role !== 'admin') {
 		throw new Error('Unauthorized: Admin access required')
 	}
 	return session.user

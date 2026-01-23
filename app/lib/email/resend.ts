@@ -16,7 +16,7 @@ export async function sendBookingConfirmationEmail(appointment: Appointment) {
 		const { data, error } = await resend.emails.send({
 			from: FROM_EMAIL,
 			to: appointment.customerEmail,
-			subject: 'Appointment Confirmation - Blond House',
+			subject: 'Appointment Confirmation - Hair Studio',
 			html: `
 				<!DOCTYPE html>
 				<html>
@@ -36,7 +36,7 @@ export async function sendBookingConfirmationEmail(appointment: Appointment) {
 				<body>
 					<div class="container">
 						<div class="header">
-							<h1>BLOND HOUSE</h1>
+							<h1>HAIR STUDIO</h1>
 						</div>
 						<div class="content">
 							<h2>Appointment Confirmed!</h2>
@@ -69,7 +69,7 @@ export async function sendBookingConfirmationEmail(appointment: Appointment) {
 							<p>If you need to cancel or reschedule, please contact us as soon as possible.</p>
 						</div>
 						<div class="footer">
-							<p>Blond House - Hair Design Studio</p>
+							<p>Hair Studio</p>
 							<p>Amsterdam</p>
 						</div>
 					</div>
@@ -118,7 +118,7 @@ export async function sendAdminNotificationEmail(appointment: Appointment) {
 				<body>
 					<div class="container">
 						<div class="header">
-							<h1>BLOND HOUSE</h1>
+							<h1>HAIR STUDIO</h1>
 							<h2>New Appointment Booking</h2>
 						</div>
 						<div class="content">
@@ -186,7 +186,7 @@ export async function sendAppointmentChangeEmail(
 		const { data, error } = await resend.emails.send({
 			from: FROM_EMAIL,
 			to: appointment.customerEmail,
-			subject: 'Appointment Time Changed - Blond House',
+			subject: 'Appointment Time Changed - Hair Studio',
 			html: `
 				<!DOCTYPE html>
 				<html>
@@ -206,7 +206,7 @@ export async function sendAppointmentChangeEmail(
 				<body>
 					<div class="container">
 						<div class="header">
-							<h1>BLOND HOUSE</h1>
+							<h1>HAIR STUDIO</h1>
 						</div>
 						<div class="content">
 							<h2>Appointment Time Changed</h2>
@@ -246,7 +246,7 @@ export async function sendAppointmentChangeEmail(
 							<p>We look forward to seeing you at the new time!</p>
 						</div>
 						<div class="footer">
-							<p>Blond House - Hair Design Studio</p>
+							<p>Hair Studio</p>
 							<p>Amsterdam</p>
 						</div>
 					</div>
@@ -280,7 +280,7 @@ export async function sendCancellationEmail(
 			? appointment.customerEmail!
 			: process.env.ADMIN_EMAIL_NOTIFICATION || 'admin@blondhouse.com'
 		const subject = isCustomer
-			? 'Appointment Cancelled - Blond House'
+			? 'Appointment Cancelled - Hair Studio'
 			: `Appointment Cancelled - ${appointment.customerName}`
 
 		const { data, error } = await resend.emails.send({
@@ -305,7 +305,7 @@ export async function sendCancellationEmail(
 				<body>
 					<div class="container">
 						<div class="header">
-							<h1>BLOND HOUSE</h1>
+							<h1>HAIR STUDIO</h1>
 						</div>
 						<div class="content">
 							<h2>Appointment Cancelled</h2>

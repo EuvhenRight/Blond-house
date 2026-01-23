@@ -99,7 +99,7 @@ export default function TimeSlotSelector({
 
 	return (
 		<div
-			className='mb-6 bg-white rounded-lg p-4 sm:p-6'
+			className='mb-6'
 			role='region'
 			aria-label={`Available time slots for ${weekday}, ${monthDay}`}
 		>
@@ -116,7 +116,7 @@ export default function TimeSlotSelector({
 						<h4 className='text-xs font-semibold text-zinc-500 uppercase tracking-wide'>
 							{group.period}
 						</h4>
-						<div className='grid grid-cols-2 sm:grid-cols-3 gap-2'>
+						<div className='grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2'>
 							{group.slots.map(time => (
 								<button
 									key={time}
@@ -124,13 +124,13 @@ export default function TimeSlotSelector({
 									onClick={() => onTimeSelect(time)}
 									aria-label={`Select time: ${time}`}
 									aria-pressed={selectedTime === time}
-									className={`group relative w-full overflow-hidden px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg font-medium text-sm sm:text-base text-center cursor-pointer transition-all duration-200 min-h-[44px] sm:min-h-[48px] flex items-center justify-center ${
+									className={`group relative w-full overflow-hidden px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 rounded-lg font-medium text-xs sm:text-sm md:text-base text-center cursor-pointer transition-all duration-200 min-h-[44px] sm:min-h-[48px] flex items-center justify-center ${
 										selectedTime === time
-											? 'bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 text-white shadow-lg ring-2 ring-amber-500 ring-offset-2'
+											? 'bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 text-white shadow-lg'
 											: 'bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 text-zinc-800 border border-zinc-200 hover:border-zinc-300'
 									}`}
 								>
-									<span className='relative z-10'>{time}</span>
+									<span className='relative z-10 whitespace-nowrap'>{time}</span>
 								</button>
 							))}
 						</div>

@@ -21,13 +21,13 @@ export default function SelectedServiceDisplay({
 		<div className='w-full p-4 sm:p-4 md:p-4 bg-amber-50 border-y border-amber-200 md:border md:rounded-lg'>
 			<div className='flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4'>
 				<div className='flex-1 w-full sm:w-auto'>
-					<h3 className='text-lg sm:text-xl font-semibold text-zinc-900 mb-2'>
+					<h3 className='font-semibold text-zinc-900 mb-2'>
 						{service.name}
 					</h3>
-					<p className='text-sm text-zinc-600 mb-3'>
+					<p className='text-zinc-600 mb-3'>
 						{service.price} • {formatDuration(service.duration)}
 					</p>
-					<p className='text-sm text-zinc-600 leading-relaxed'>
+					<p className='text-zinc-600 leading-relaxed'>
 						{service.description}
 					</p>
 				</div>

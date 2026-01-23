@@ -1,6 +1,6 @@
 # FullCalendar Usage Guide
 
-This guide explains how FullCalendar is used in your Blond House booking system.
+This guide explains how FullCalendar is used in your Hair Studio booking system.
 
 ## 📦 Installed Packages
 

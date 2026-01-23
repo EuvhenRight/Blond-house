@@ -12,7 +12,6 @@ import {
 	deleteAppointment as deleteAppointmentDb,
 	getAllAppointments,
 	getAppointmentsByDateRange as getAppointmentsByDateRangeDb,
-	getAvailability as getAvailabilityDb,
 	getAvailableTimeSlots,
 	removeAvailability as removeAvailabilityDb,
 	setAvailability as setAvailabilityDb,

@@ -3,8 +3,8 @@
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { FormEvent, useState } from 'react'
-import { loginSchema } from '../../lib/validation'
 import { ZodError } from 'zod'
+import { loginSchema } from '../../lib/validation'
 
 interface FieldErrors {
 	email?: string
@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
 			<div className='max-w-md w-full bg-white rounded-2xl shadow-xl p-8'>
 				<div className='text-center mb-8'>
 					<h1 className='text-3xl font-bold text-zinc-900 mb-2'>Admin Login</h1>
-					<p className='text-zinc-600'>Blond House Appointment System</p>
+					<p className='text-zinc-600'>Hair Studio Appointment System</p>
 				</div>
 
 				<form onSubmit={handleSubmit} className='space-y-6'>

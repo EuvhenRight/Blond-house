@@ -8,6 +8,32 @@
 
 html {
 	scroll-behavior: smooth;
+	overflow-x: hidden;
+	width: 100%;
+	max-width: 100vw;
+}
+
+body {
+	overflow-x: hidden;
+	width: 100%;
+	max-width: 100vw;
+}
+
+/* Image rendering optimizations */
+img,
+picture,
+video {
+	max-width: 100%;
+	height: auto;
+	image-rendering: -webkit-optimize-contrast;
+	image-rendering: crisp-edges;
+}
+
+/* Next.js Image component optimizations */
+img[src*='/_next/image'] {
+	image-rendering: auto;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 :root {
@@ -45,6 +71,17 @@ body {
 	font-family: 'title', serif;
 	font-weight: lighter;
 	background: var(--color-background-gradient);
+	/* Mobile (370-440px) */
+	font-size: 16px;
+	line-height: 140%; /* 1.4 */
+}
+
+/* Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	body {
+		font-size: 18px;
+		line-height: 140%; /* 1.4 */
+	}
 }
 
 /* Headings - Content, sans-serif with bold weight */
@@ -56,6 +93,91 @@ h5,
 h6 {
 	font-family: 'Content', var(--font-plus-jakarta-sans), sans-serif;
 	font-weight: 700;
+	line-height: 120%; /* 1.2 */
+}
+
+/* H1 - Mobile (370-440px) */
+h1 {
+	font-size: 32px;
+}
+
+/* H1 - Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	h1 {
+		font-size: 56px;
+	}
+}
+
+/* Hero section title - override global h1 styles */
+.hero-title {
+	font-family: 'title', serif !important;
+	font-weight: lighter !important;
+	line-height: 140% !important;
+	/* Customize these values to change the title appearance: */
+	/* font-size: 2rem; */
+	/* letter-spacing: 0.05em; */
+	/* text-transform: none; */
+	/* color: inherit; */
+}
+
+/* H2 - Mobile (370-440px) */
+h2 {
+	font-size: 24px;
+}
+
+/* H2 - Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	h2 {
+		font-size: 40px;
+	}
+}
+
+/* H3 - Mobile (370-440px) */
+h3 {
+	font-size: 20px;
+}
+
+/* H3 - Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	h3 {
+		font-size: 28px;
+	}
+}
+
+/* H4 - Mobile (370-440px) */
+h4 {
+	font-size: 18px;
+}
+
+/* H4 - Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	h4 {
+		font-size: 22px;
+	}
+}
+
+/* H5 - Mobile (370-440px) */
+h5 {
+	font-size: 16px;
+}
+
+/* H5 - Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	h5 {
+		font-size: 18px;
+	}
+}
+
+/* H6 - Mobile (370-440px) */
+h6 {
+	font-size: 16px;
+}
+
+/* H6 - Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	h6 {
+		font-size: 18px;
+	}
 }
 
 /* All other text elements - title, serif with lighter weight */
@@ -72,6 +194,34 @@ td,
 th {
 	font-family: 'title', serif;
 	font-weight: lighter;
+	/* Mobile (370-440px) */
+	font-size: 16px;
+	line-height: 140%; /* 1.4 */
+}
+
+/* Desktop (1440-1920px) */
+@media (min-width: 1440px) {
+	p,
+	span,
+	a,
+	button,
+	input,
+	textarea,
+	select,
+	label,
+	li,
+	td,
+	th {
+		font-size: 18px;
+		line-height: 140%; /* 1.4 */
+	}
+}
+
+/* Small / Caption - Mobile and Desktop */
+small,
+.caption {
+	font-size: 12px;
+	line-height: 140%; /* 1.4 */
 }
 
 /* Gold Font Style */

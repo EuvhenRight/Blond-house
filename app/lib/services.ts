@@ -1,5 +1,5 @@
 /**
- * Services configuration for Blond House
+ * Services configuration for Hair Studio
  */
 
 export interface Service {
