@@ -16,7 +16,7 @@ import {
 import { getServiceColor, services } from '../../lib/services'
 import type { Appointment, Availability } from '../../lib/types'
 import ConfirmDialog from './ConfirmDialog'
-import DayCell from './DayCell'
+import Timeslot from './Timeslot'
 
 interface AdminCalendarProps {
 	onAvailabilityChange: () => void
@@ -79,6 +79,30 @@ function isPastDate(date: Date): boolean {
 	const d = new Date(date)
 	d.setHours(0, 0, 0, 0)
 	return d < today
+}
+
+/**
+ * Format time range as "10:00-11:00 AM" (compact, single AM/PM)
+ */
+function formatTimeRange(start: Date, end: Date): string {
+	const pad = (n: number) => String(n).padStart(2, '0')
+	const fmt = (d: Date) => `${d.getHours() % 12 || 12}:${pad(d.getMinutes())}`
+	const period = start.getHours() < 12 ? 'AM' : 'PM'
+	return `${fmt(start)}-${fmt(end)} ${period}`
+}
+
+/**
+ * Format time range as "10:00-11:00 AM" from start time string and duration (minutes)
+ */
+function formatTimeRangeFromDuration(startTime: string, durationMinutes: number): string {
+	const [h, m] = startTime.split(':').map(Number)
+	const start = new Date()
+	start.setHours(h, m, 0, 0)
+	const end = new Date(start.getTime() + durationMinutes * 60 * 1000)
+	const pad = (n: number) => String(n).padStart(2, '0')
+	const fmt = (d: Date) => `${d.getHours() % 12 || 12}:${pad(d.getMinutes())}`
+	const period = start.getHours() < 12 ? 'AM' : 'PM'
+	return `${fmt(start)}-${fmt(end)} ${period}`
 }
 
 /**
@@ -178,7 +202,9 @@ export default function AdminCalendar({
 	const [currentMonthChip, setCurrentMonthChip] = useState<string>('')
 	const [currentMonthYearLabel, setCurrentMonthYearLabel] = useState<string>('')
 	const [currentWeekLabel, setCurrentWeekLabel] = useState<string>('')
+	const [viewedDayDate, setViewedDayDate] = useState<string | null>(null)
 	const [isLoading, setIsLoading] = useState(true)
+	const [toolbarCompact, setToolbarCompact] = useState(false)
 
 	type AvailabilityConfirmState = {
 		type: 'toggleWorkingOff'
@@ -270,6 +296,7 @@ export default function AdminCalendar({
 							? getServiceColor(appointment.serviceId)
 							: getAppointmentColorByDuration(durationMinutes)
 
+						const isPast = startDate < new Date()
 						return {
 							id: appointment.id,
 							title: `${appointment.time} - ${appointment.customerName}`,
@@ -278,6 +305,7 @@ export default function AdminCalendar({
 							backgroundColor: colors.backgroundColor,
 							borderColor: colors.borderColor,
 							textColor: colors.color,
+							editable: !isPast,
 							extendedProps: {
 								isAppointment: true,
 								customerName: appointment.customerName,
@@ -310,8 +338,8 @@ export default function AdminCalendar({
 							title: '', // No title text for background events
 							start: start.toISOString(),
 							end: end.toISOString(),
-							backgroundColor: '#f3f4f6', // Light gray background
-							borderColor: '#e5e7eb',
+							backgroundColor: '#e5e7eb', // Gray-200: visible gray for working time area
+							borderColor: '#d1d5db',
 							display: 'background',
 							extendedProps: {
 								isAvailability: true,
@@ -354,8 +382,15 @@ export default function AdminCalendar({
 		void loadData()
 	}, [refreshToken, loadData])
 
-	// Handle date clicks in month view: always navigate to the day view
-	// so you can see the full schedule and manage appointments there.
+	// Shrink toolbar when user has scrolled down
+	useEffect(() => {
+		const onScroll = () => setToolbarCompact(window.scrollY > 80)
+		onScroll()
+		window.addEventListener('scroll', onScroll, { passive: true })
+		return () => window.removeEventListener('scroll', onScroll)
+	}, [])
+
+	// Handle date clicks in month view: always open day view (whether day has timeslots or not)
 	const handleDateClick = (clickInfo: { dateStr: string; date: Date }) => {
 		if (currentView !== 'dayGridMonth') return
 
@@ -375,8 +410,8 @@ export default function AdminCalendar({
 		const startDate = new Date(selectInfo.start)
 		const endDate = new Date(selectInfo.end)
 
-		// Do not allow creating or editing past days
-		if (isPastDate(startDate)) {
+		// Do not allow creating or editing past days or past time slots (e.g. past hours today)
+		if (startDate < new Date()) {
 			return
 		}
 
@@ -617,6 +652,7 @@ export default function AdminCalendar({
 		setCurrentMonthChip(monthShortFormatter.format(viewStart).toUpperCase())
 		setCurrentDayLabel(dayFormatter.format(viewStart))
 		setCurrentMonthYearLabel(monthYearFormatter.format(viewStart))
+		setViewedDayDate(view.type === 'timeGridDay' ? formatDateLocal(viewStart) : null)
 
 		if (view.type === 'timeGridWeek' || view.type === 'week') {
 			const weekNumber = getWeekNumber(viewStart)
@@ -718,36 +754,37 @@ export default function AdminCalendar({
 	const dayCellClassNames = useCallback(
 		(arg: DayCellClassNamesArg) => {
 			const classes: string[] = []
-			if (!selectedDate) {
-				return classes
-			}
-
-			// Use local timezone formatting to match the day the user sees
 			const cellDateStr = formatDateLocal(arg.date)
-
-			if (cellDateStr === selectedDate) {
+			if (selectedDate && cellDateStr === selectedDate) {
 				classes.push('fc-admin-day-selected')
 			}
-
 			return classes
 		},
 		[selectedDate]
 	)
 
-	// Custom day cell content for month view - using DayCell component
+	const dayHeaderClassNames = useCallback(
+		(arg: { date: Date }) => {
+			const dateStr = formatDateLocal(arg.date)
+			const availability = availabilityData.get(dateStr)
+			if (availability && !availability.isWorkingDay) {
+				return ['fc-day-unavailable']
+			}
+			return ['fc-day-available']
+		},
+		[availabilityData]
+	)
+
+	// Custom day cell content for month view - inline timeslots (no DayCell)
 	const dayCellContent = useCallback(
 		(arg: { date: Date; dayNumberText: string; view: { type: string } }) => {
-			// Only show custom content in month view
 			if (arg.view.type !== 'dayGridMonth') {
 				return <>{arg.dayNumberText}</>
 			}
 
-			// Use local timezone formatting to avoid date shifting
 			const dateStr = formatDateLocal(arg.date)
 			const availability = availabilityData.get(dateStr)
 			const appointments = appointmentsByDate.get(dateStr) || []
-
-			// Check if date is in the past
 			const today = new Date()
 			today.setHours(0, 0, 0, 0)
 			const cellDate = new Date(arg.date)
@@ -755,21 +792,127 @@ export default function AdminCalendar({
 			const isPast = cellDate < today
 			const isToday = cellDate.getTime() === today.getTime()
 
+			const confirmedAppointments = appointments
+				.filter(apt => apt.status === 'confirmed')
+				.sort((a, b) => a.time.localeCompare(b.time))
+			const maxVisible = 3
+			const visibleAppointments = confirmedAppointments.slice(0, maxVisible)
+			const remainingCount = confirmedAppointments.length - maxVisible
+
+			const handleMoreClick = () => {
+				const api = calendarRef.current?.getApi()
+				if (api) api.changeView('timeGridDay', arg.date)
+			}
+
+			const isAvailable = Boolean(availability?.isWorkingDay)
 			return (
-				<DayCell
-					date={arg.date}
-					dayNumberText={arg.dayNumberText}
-					availability={availability}
-					appointments={appointments}
-					isPast={isPast}
-					isToday={isToday}
-				/>
+				<div
+					className={`admin-day-cell ${isAvailable ? 'admin-day-available' : 'admin-day-unavailable'}`}
+					role='gridcell'
+					aria-label={`${dateStr} - ${isAvailable ? 'Available' : 'Not available'} - ${confirmedAppointments.length} appointment${confirmedAppointments.length !== 1 ? 's' : ''}`}
+				>
+					<div
+						className={`admin-day-number ${isToday ? 'admin-day-number-today' : ''}`}
+						aria-label={isToday ? `Today, ${arg.dayNumberText}` : arg.dayNumberText}
+						aria-hidden='false'
+					>
+						{arg.dayNumberText}
+					</div>
+					<div className='admin-day-status' aria-hidden='false'>
+						{availability && availability.isWorkingDay ? (
+							availability.workingHours && (
+								<div
+									className={`admin-day-working-hours ${isPast ? 'admin-day-past' : ''}`}
+									aria-label={`Working hours: ${availability.workingHours.start} to ${availability.workingHours.end}`}
+								>
+									{availability.workingHours.start}-{availability.workingHours.end}
+								</div>
+							)
+						) : (
+							<div
+								className={`admin-day-closed ${isPast ? 'admin-day-past' : ''}`}
+								aria-label='Not available'
+							>
+								Not available
+							</div>
+						)}
+					</div>
+					{confirmedAppointments.length > 0 && (
+						<div
+							className='admin-day-appointment-count-mobile'
+							aria-label={`${confirmedAppointments.length} appointment${confirmedAppointments.length !== 1 ? 's' : ''}`}
+						>
+							{confirmedAppointments.length}
+						</div>
+					)}
+					<div
+						className='admin-day-events'
+						role='list'
+						aria-label={`${confirmedAppointments.length} appointment${confirmedAppointments.length !== 1 ? 's' : ''}`}
+					>
+						{availability?.isWorkingDay ? (
+							<>
+								{visibleAppointments.map((appointment, index) => {
+									const timeRange = formatTimeRangeFromDuration(
+										appointment.time,
+										appointment.duration ?? 60
+									)
+									const durationMinutes = appointment.duration ?? 60
+									const colors = appointment.serviceId
+										? getServiceColor(appointment.serviceId)
+										: getAppointmentColorByDuration(durationMinutes)
+									const appointmentStart = new Date(
+										`${appointment.date}T${appointment.time}`
+									)
+									const isPastAppointment = appointmentStart < new Date()
+									return (
+										<div
+											key={appointment.id ?? index}
+											className={`w-full min-w-0 ${isPastAppointment ? 'admin-day-past cursor-default' : 'cursor-pointer'} ${isPast ? 'admin-day-past' : ''}`}
+											role='listitem'
+											aria-label={`Appointment: ${appointment.customerName} at ${appointment.time}`}
+											onClick={() => {
+												// Past appointments are read-only – do not open edit
+												if (isPastAppointment) return
+												if (appointment.id && onAppointmentClick) {
+													onAppointmentClick(appointment.id)
+												}
+											}}
+										>
+											<Timeslot
+												variant='month'
+												timeRange={timeRange}
+												name={appointment.customerName}
+												duration={durationMinutes}
+												serviceName={appointment.serviceName ?? undefined}
+												phone={appointment.customerPhone ?? undefined}
+												email={appointment.customerEmail ?? undefined}
+												backgroundColor={colors.backgroundColor}
+												borderColor={colors.borderColor}
+												textColor={colors.color}
+											/>
+										</div>
+									)
+								})}
+								{remainingCount > 0 && (
+									<div
+										className={`admin-day-more-events ${isPast ? 'admin-day-past' : ''}`}
+										role='listitem'
+										aria-label={`See ${remainingCount} more appointment${remainingCount !== 1 ? 's' : ''}`}
+										onClick={handleMoreClick}
+									>
+										See {remainingCount} more
+									</div>
+								)}
+							</>
+						) : null}
+					</div>
+				</div>
 			)
 		},
-		[availabilityData, appointmentsByDate]
+		[availabilityData, appointmentsByDate, onAppointmentClick]
 	)
 
-	// Custom appointment rendering for clearer hierarchy in all views
 	const renderEventContent = useCallback((arg: EventContentArg) => {
 		const { event, timeText, view } = arg
 		const extended = event.extendedProps as {
@@ -781,76 +924,49 @@ export default function AdminCalendar({
 			customerPhone?: string
 		}
 
-		// Keep default rendering for non-appointment/background events
 		if (!extended.isAppointment) {
 			return undefined
 		}
 
 		const name = extended.customerName || event.title || 'Appointment'
 		const serviceName = extended.serviceName
-		const duration = extended.duration
+		const duration = extended.duration ?? 0
 		const email = extended.customerEmail
 		const phone = extended.customerPhone
 
-		const isTimeGrid =
-			view.type === 'timeGridDay' || view.type === 'timeGridWeek'
+		const timeRange =
+			event.start && event.end
+				? formatTimeRange(event.start, event.end)
+				: timeText
 
-		// Build full text for native browser tooltip (hover to see full info)
-		const tooltipParts: string[] = []
-		tooltipParts.push(name)
-		if (serviceName) tooltipParts.push(`Service: ${serviceName}`)
-		tooltipParts.push(`Time: ${timeText}`)
-		if (duration) tooltipParts.push(`Duration: ${duration} min`)
-		if (phone) tooltipParts.push(`Phone: ${phone}`)
-		if (email) tooltipParts.push(`Email: ${email}`)
-		const tooltipText = tooltipParts.join(' • ')
+		const variant =
+			view.type === 'timeGridDay'
+				? 'day'
+				: view.type === 'timeGridWeek'
+					? 'week'
+					: 'list'
 
-		// For time-grid views, use a stacked layout only:
-		// 1) time + duration
-		// 2) customer name
-		// 3) service name
-		// 4) phone (truncated)
-		// 5) email (truncated)
-		if (isTimeGrid) {
-			return (
-				<div
-					className='flex flex-col gap-0.5 text-[11px] leading-tight'
-					title={tooltipText}
-				>
-					<div className='flex items-center justify-between gap-1 text-[10px]'>
-						<span className='font-medium'>{timeText}</span>
-						{duration ? (
-							<span className='text-[10px] font-medium opacity-90'>
-								{duration} min
-							</span>
-						) : null}
-					</div>
-					<div className='font-semibold truncate'>{name}</div>
-					{serviceName && (
-						<div className='truncate text-[10px] opacity-90'>{serviceName}</div>
-					)}
-					{phone && (
-						<div className='truncate text-[10px] opacity-90'>{phone}</div>
-					)}
-					{email && (
-						<div className='truncate text-[10px] opacity-90'>{email}</div>
-					)}
-				</div>
-			)
-		}
+		const ev = event as { backgroundColor?: string; borderColor?: string; textColor?: string }
+		const weekColors =
+			view.type === 'timeGridWeek'
+				? {
+						backgroundColor: ev.backgroundColor ?? '#3b82f6',
+						borderColor: ev.borderColor ?? '#2563eb',
+						textColor: ev.textColor ?? '#ffffff',
+					}
+				: undefined
 
-		// Fallback for other views (e.g. list view) – keep compact layout
 		return (
-			<div
-				className='flex flex-col gap-0.5 text-[11px] leading-tight'
-				title={tooltipText}
-			>
-				<span className='font-semibold truncate'>{name}</span>
-				<span className='text-[10px] font-medium'>{timeText}</span>
-				{serviceName && (
-					<span className='truncate text-[10px] opacity-90'>{serviceName}</span>
-				)}
-			</div>
+			<Timeslot
+				timeRange={timeRange}
+				name={name}
+				duration={duration}
+				serviceName={serviceName}
+				phone={phone ?? undefined}
+				email={email ?? undefined}
+				variant={variant}
+				{...(weekColors ?? {})}
+			/>
 		)
 	}, [])
 
@@ -891,78 +1007,119 @@ export default function AdminCalendar({
 
 	return (
 		<div
-			className='admin-calendar w-full relative bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden'
+			className='admin-calendar w-full relative bg-white rounded-xl border border-gray-200 shadow-sm overflow-visible'
 			role='region'
 			aria-label='Admin calendar - Manage appointments and working hours'
 			aria-busy={isLoading}
 		>
 			{isLoading && (
 				<div
-					className='absolute inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center'
+					className='absolute inset-0 z-50 flex items-center justify-center pointer-events-none'
 					role='status'
 					aria-live='polite'
 					aria-label='Loading calendar data'
 				>
-					<div className='flex flex-col items-center gap-3'>
-						<svg
-							className='animate-spin h-8 w-8 text-amber-500'
-							xmlns='http://www.w3.org/2000/svg'
-							fill='none'
-							viewBox='0 0 24 24'
-							aria-hidden='true'
-						>
-							<circle
-								className='opacity-25'
-								cx='12'
-								cy='12'
-								r='10'
-								stroke='currentColor'
-								strokeWidth='4'
-							></circle>
-							<path
-								className='opacity-75'
-								fill='currentColor'
-								d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-							></path>
-						</svg>
-						<p className='text-sm text-zinc-600 font-medium'>
-							Loading calendar...
-						</p>
-					</div>
+					<svg
+						className='animate-spin h-8 w-8 text-amber-500'
+						xmlns='http://www.w3.org/2000/svg'
+						fill='none'
+						viewBox='0 0 24 24'
+						aria-hidden='true'
+					>
+						<circle
+							className='opacity-25'
+							cx='12'
+							cy='12'
+							r='10'
+							stroke='currentColor'
+							strokeWidth='4'
+						></circle>
+						<path
+							className='opacity-75'
+							fill='currentColor'
+							d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+						></path>
+					</svg>
 				</div>
 			)}
 
-			{/* Toolbar: Untitled UI–style header + navigation + view switcher */}
-			<div className='flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 pt-4 sm:pt-5 pb-3 border-b border-gray-100 bg-white'>
-				<div className='flex items-center gap-3 sm:gap-4'>
-					<div className='hidden sm:flex flex-col items-center justify-center rounded-xl bg-zinc-900 px-3 py-2 text-white shadow-sm'>
-						<span className='text-[10px] font-semibold uppercase tracking-[0.14em] text-amber-200'>
+			{/* Toolbar: all sticky at top – date display left, nav + view switcher right; compact when scrolled */}
+			<div
+				className={clsx(
+					'sticky top-36 z-40 flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-100 bg-white shadow-sm transition-all duration-200',
+					toolbarCompact
+						? 'gap-2 px-3 sm:px-4 py-2'
+						: 'gap-3 px-4 sm:px-6 pt-4 sm:pt-5 pb-3'
+				)}
+				role='group'
+				aria-label='Calendar toolbar'
+			>
+				<div className='flex items-center gap-2 sm:gap-4 min-w-0 flex-1'>
+					<div
+						className={clsx(
+							'hidden sm:flex flex-col items-center justify-center rounded-lg bg-zinc-900 text-white shadow-sm',
+							toolbarCompact ? 'px-2 py-1.5' : 'rounded-xl px-3 py-2'
+						)}
+					>
+						<span
+							className={clsx(
+								'font-semibold uppercase tracking-[0.14em] text-amber-200',
+								toolbarCompact ? 'text-[9px]' : 'text-[10px]'
+							)}
+						>
 							{currentMonthChip || '—'}
 						</span>
-						<span className='text-xl font-semibold sm:text-2xl'>
+						<span
+							className={clsx(
+								'font-semibold',
+								toolbarCompact ? 'text-base' : 'text-xl sm:text-2xl'
+							)}
+						>
 							{currentDayLabel || ''}
 						</span>
 					</div>
-					<div className='space-y-1'>
-						<p className='text-[11px] font-semibold uppercase tracking-[0.12em] text-zinc-400'>
+					<div className='space-y-0.5 min-w-0'>
+						<p
+							className={clsx(
+								'font-semibold uppercase tracking-[0.12em] text-zinc-400',
+								toolbarCompact ? 'text-[10px]' : 'text-[11px]'
+							)}
+						>
 							{currentWeekLabel
 								? `${currentMonthYearLabel || 'Schedule'} • ${currentWeekLabel}`
 								: currentMonthYearLabel || 'Schedule'}
 						</p>
-						<p className='text-sm sm:text-base lg:text-lg font-semibold text-zinc-900'>
+						<p
+							className={clsx(
+								'font-semibold text-zinc-900',
+								toolbarCompact
+									? 'text-xs sm:text-sm'
+									: 'text-sm sm:text-base lg:text-lg'
+							)}
+						>
 							{currentRangeLabel || 'Upcoming schedule'}
-						</p>
-						<p className='hidden text-xs text-zinc-500 sm:block sm:text-[13px] lg:text-sm'>
-							Manage working days, hours, and client appointments in one view.
 						</p>
 					</div>
 				</div>
-				<div className='flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:gap-3'>
-					<div className='inline-flex items-center justify-between rounded-full border border-zinc-200 bg-white px-1.5 py-1 shadow-sm'>
+				<div
+					className={clsx(
+						'flex flex-col-reverse sm:flex-row sm:items-center shrink-0',
+						toolbarCompact ? 'gap-1.5 sm:gap-2' : 'gap-2 sm:gap-3'
+					)}
+				>
+					<div
+						className={clsx(
+							'inline-flex items-center justify-between rounded-full border border-zinc-200 bg-white shadow-sm',
+							toolbarCompact ? 'px-1 py-0.5' : 'px-1.5 py-1'
+						)}
+					>
 						<button
 							type='button'
 							onClick={handlePrev}
-							className='inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] sm:text-xs lg:text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1'
+							className={clsx(
+								'inline-flex items-center justify-center rounded-full font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1',
+								toolbarCompact ? 'h-6 w-6 text-[10px]' : 'h-7 w-7 text-[11px] sm:text-xs lg:text-sm'
+							)}
 							aria-label='Previous period'
 						>
 							<span aria-hidden='true'>‹</span>
@@ -970,21 +1127,30 @@ export default function AdminCalendar({
 						<button
 							type='button'
 							onClick={handleToday}
-							className='px-2.5 py-1 rounded-full text-[11px] sm:text-xs lg:text-sm font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1'
+							className={clsx(
+								'rounded-full font-medium text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1',
+								toolbarCompact ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px] sm:text-xs lg:text-sm'
+							)}
 						>
 							Today
 						</button>
 						<button
 							type='button'
 							onClick={handleNext}
-							className='inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] sm:text-xs lg:text-sm font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1'
+							className={clsx(
+								'inline-flex items-center justify-center rounded-full font-medium text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-1',
+								toolbarCompact ? 'h-6 w-6 text-[10px]' : 'h-7 w-7 text-[11px] sm:text-xs lg:text-sm'
+							)}
 							aria-label='Next period'
 						>
 							<span aria-hidden='true'>›</span>
 						</button>
 					</div>
 					<div
-						className='inline-flex items-center gap-0.5 rounded-full bg-zinc-100 p-0.5 text-[11px] sm:text-xs lg:text-sm'
+						className={clsx(
+							'inline-flex items-center gap-0.5 rounded-full bg-zinc-100 p-0.5',
+							toolbarCompact ? 'text-[10px]' : 'text-[11px] sm:text-xs lg:text-sm'
+						)}
 						role='tablist'
 						aria-label='Change calendar view'
 					>
@@ -1001,7 +1167,8 @@ export default function AdminCalendar({
 								aria-selected={currentView === view.id}
 								onClick={() => handleViewChange(view.id)}
 								className={clsx(
-									'px-2.5 py-1 rounded-full font-medium transition-colors',
+									'rounded-full font-medium transition-colors',
+									toolbarCompact ? 'px-2 py-0.5' : 'px-2.5 py-1',
 									currentView === view.id
 										? 'bg-white text-zinc-900 shadow-sm'
 										: 'text-zinc-600 hover:text-zinc-900'
@@ -1055,7 +1222,7 @@ export default function AdminCalendar({
 										}}
 										aria-hidden='true'
 									/>
-									<span className='max-w-[10rem] truncate font-medium text-gray-600'>
+									<span className='max-w-40 truncate font-medium text-gray-600'>
 										{service.name}
 									</span>
 								</div>
@@ -1064,6 +1231,82 @@ export default function AdminCalendar({
 					</div>
 				</div>
 			</div>
+
+			{/* Day view: past days are read-only – only appointment info; future/today shows working time and Change status */}
+			{viewedDayDate && (() => {
+				const viewedDate = new Date(viewedDayDate + 'T12:00:00')
+				const isPast = isPastDate(viewedDate)
+				const availability = availabilityData.get(viewedDayDate)
+				const confirmedCount = (appointmentsByDate.get(viewedDayDate) || []).filter(
+					a => a.status === 'confirmed'
+				).length
+				const hasTimeslots = confirmedCount > 0
+				const isAvailable = !!availability?.isWorkingDay
+				const hours =
+					!isPast && isAvailable && availability?.workingHours
+						? `${availability.workingHours.start}–${availability.workingHours.end}`
+						: null
+				return (
+					<div
+						className='px-4 sm:px-6 py-3 border-b border-gray-100 bg-white/80 flex flex-wrap items-center justify-between gap-2'
+						role='region'
+						aria-label={isPast ? 'Past day – view only' : 'Day actions'}
+					>
+						<span className='text-sm text-zinc-600'>
+							{viewedDate.toLocaleDateString('en-US', {
+								weekday: 'long',
+								month: 'short',
+								day: 'numeric',
+							})}
+							{isPast ? (
+								<>
+									{' · '}
+									<span className='text-zinc-500'>Past day – view only</span>
+								</>
+							) : hours ? (
+								<>
+									{' · '}
+									<span className='font-medium text-emerald-600'>{hours}</span>
+								</>
+							) : (
+								<>
+									{' · '}
+									<span className='text-zinc-500'>Not available</span>
+								</>
+							)}
+							{' · '}
+							{confirmedCount} appointment{confirmedCount !== 1 ? 's' : ''}
+						</span>
+						{!isPast && (
+							<button
+								type='button'
+								disabled={hasTimeslots}
+								onClick={() => {
+									if (hasTimeslots) return
+									const avail = availabilityData.get(viewedDayDate)
+									const hrs = avail?.workingHours || {
+										start: '10:00',
+										end: '17:00',
+									}
+									setSelectedDate(viewedDayDate)
+									setSelectedTimeSlot(null)
+									setWorkingHours({ start: hrs.start, end: hrs.end })
+									setShowHoursModal(true)
+								}}
+								className={clsx(
+									'px-3 py-2 rounded-lg font-medium text-sm transition-colors focus:ring-2 focus:ring-amber-500 focus:ring-offset-1',
+									hasTimeslots
+										? 'cursor-not-allowed opacity-50 bg-zinc-200 text-zinc-500'
+										: 'bg-amber-500 text-white hover:bg-amber-600'
+								)}
+								title={hasTimeslots ? 'Change status only when day has no appointments' : undefined}
+							>
+								Change status
+							</button>
+						)}
+					</div>
+				)
+			})()}
 
 			<div
 				role='application'
@@ -1078,7 +1321,7 @@ export default function AdminCalendar({
 						interactionPlugin,
 						listPlugin,
 					]}
-					initialView='timeGridWeek'
+					initialView='dayGridMonth'
 					headerToolbar={false}
 					buttonText={{
 						today: 'Today',
@@ -1090,10 +1333,16 @@ export default function AdminCalendar({
 					dateClick={handleDateClick}
 					select={handleDateSelect}
 					selectable={
-						currentView === 'timeGridDay' || currentView === 'timeGridWeek'
+						(currentView === 'timeGridDay' || currentView === 'timeGridWeek') &&
+						!(
+							currentView === 'timeGridDay' &&
+							viewedDayDate &&
+							isPastDate(new Date(viewedDayDate + 'T12:00:00'))
+						)
 					}
 					selectMirror={true}
 					dayCellClassNames={dayCellClassNames}
+					dayHeaderClassNames={dayHeaderClassNames}
 					dayCellContent={dayCellContent}
 					events={events}
 					eventContent={renderEventContent}
@@ -1145,10 +1394,19 @@ export default function AdminCalendar({
 					eventDurationEditable={false}
 					datesSet={handleDatesSet}
 					eventDrop={handleEventDrop}
-					eventStartEditable={true}
+					eventStartEditable={
+						!(
+							currentView === 'timeGridDay' &&
+							viewedDayDate &&
+							isPastDate(new Date(viewedDayDate + 'T12:00:00'))
+						)
+					}
 					eventClick={clickInfo => {
 						if (!clickInfo.event.extendedProps?.isAppointment) return
 						clickInfo.jsEvent.preventDefault()
+						// Past appointments are read-only – do not open edit modal
+						const start = clickInfo.event.start
+						if (start && start < new Date()) return
 						if (onAppointmentClick && clickInfo.event.id) {
 							onAppointmentClick(clickInfo.event.id)
 						}
@@ -1243,21 +1501,48 @@ export default function AdminCalendar({
 									className='w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-zinc-300 rounded-lg text-base focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors min-h-[48px]'
 								/>
 							</div>
-							<div className='flex flex-col sm:flex-row gap-3 pt-4'>
-								<button
-									type='button'
-									onClick={handleSaveWorkingHours}
-									className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 active:bg-amber-700 transition-colors font-medium text-base min-h-[48px] focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
-								>
-									Save
-								</button>
-								<button
-									type='button'
-									onClick={handleCancelModal}
-									className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-300 active:bg-zinc-400 transition-colors font-medium text-base min-h-[48px] focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2'
-								>
-									Cancel
-								</button>
+							<div className='flex flex-col gap-3 pt-4'>
+								<div className='flex flex-col sm:flex-row gap-3'>
+									<button
+										type='button'
+										onClick={handleSaveWorkingHours}
+										className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 active:bg-amber-700 transition-colors font-medium text-base min-h-[48px] focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
+									>
+										Save
+									</button>
+									<button
+										type='button'
+										onClick={handleCancelModal}
+										className='flex-1 px-4 sm:px-6 py-2.5 sm:py-3 bg-zinc-200 text-zinc-700 rounded-lg hover:bg-zinc-300 active:bg-zinc-400 transition-colors font-medium text-base min-h-[48px] focus:ring-2 focus:ring-zinc-500 focus:ring-offset-2'
+									>
+										Cancel
+									</button>
+								</div>
+								{(selectedDate || selectedTimeSlot?.date) &&
+									availabilityData.get(
+										(selectedDate || selectedTimeSlot?.date) ?? ''
+									)?.isWorkingDay && (
+									<button
+										type='button'
+										onClick={() => {
+											const modalDate =
+												selectedDate || selectedTimeSlot?.date
+											if (modalDate) {
+												setAvailabilityConfirm({
+													type: 'toggleWorkingOff',
+													date: modalDate,
+													hours: workingHours,
+												})
+												setShowHoursModal(false)
+												setSelectedDate(null)
+												setSelectedTimeSlot(null)
+											}
+										}}
+										className='w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 active:bg-red-100 transition-colors font-medium text-base min-h-[48px] focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
+									>
+										Set as not working
+									</button>
+								)}
 							</div>
 						</div>
 					</div>

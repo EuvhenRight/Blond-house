@@ -9,14 +9,37 @@
 html {
 	scroll-behavior: smooth;
 	overflow-x: hidden;
+	overflow-y: auto; /* Allow vertical scrolling for sticky to work */
 	width: 100%;
 	max-width: 100vw;
+	height: 100%;
 }
 
 body {
 	overflow-x: hidden;
+	overflow-y: auto; /* Allow vertical scrolling for sticky to work */
 	width: 100%;
 	max-width: 100vw;
+	height: 100%;
+	position: relative; /* Ensure body is positioned for sticky children */
+}
+
+/* Ensure sticky positioning works correctly */
+* {
+	box-sizing: border-box;
+}
+
+/* Scroll margin for anchor links – offset for sticky header (80px) */
+#about,
+#services {
+	scroll-margin-top: 80px;
+}
+
+/* Explicit support for sticky positioning */
+.sticky,
+[class*="sticky"] {
+	position: -webkit-sticky !important;
+	position: sticky !important;
 }
 
 /* Image rendering optimizations */
@@ -108,17 +131,8 @@ h1 {
 	}
 }
 
-/* Hero section title - override global h1 styles */
-.hero-title {
-	font-family: 'title', serif !important;
-	font-weight: lighter !important;
-	line-height: 140% !important;
-	/* Customize these values to change the title appearance: */
-	/* font-size: 2rem; */
-	/* letter-spacing: 0.05em; */
-	/* text-transform: none; */
-	/* color: inherit; */
-}
+/* Hero section title - Now uses Tailwind classes directly in component */
+/* Removed .hero-title class - customize via Tailwind in HeroSection.tsx */
 
 /* H2 - Mobile (370-440px) */
 h2 {
@@ -182,7 +196,7 @@ h6 {
 
 /* All other text elements - title, serif with lighter weight */
 p,
-span,
+span:not(h1 span):not(h2 span):not(h3 span):not(h4 span):not(h5 span):not(h6 span),
 a,
 button,
 input,
@@ -202,7 +216,7 @@ th {
 /* Desktop (1440-1920px) */
 @media (min-width: 1440px) {
 	p,
-	span,
+	span:not(h1 span):not(h2 span):not(h3 span):not(h4 span):not(h5 span):not(h6 span),
 	a,
 	button,
 	input,
@@ -1119,16 +1133,49 @@ small,
 	}
 }
 
+/* Override FullCalendar injected styles: dayCellContent renders inside fc-daygrid-day-top */
 .admin-calendar .fc-daygrid-day-frame {
-	padding: 0;
-	overflow: hidden;
-	border: 1px solid #e5e7eb;
-	background-color: white;
+	display: flex !important;
+	flex-direction: column !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	min-height: 100% !important;
+	padding: 0 !important;
+	overflow: hidden !important;
+	border: 1px solid #e5e7eb !important;
+	background-color: white !important;
+	box-sizing: border-box !important;
 }
 
-.admin-calendar .fc-daygrid-day-content {
-	min-height: 100%;
-	padding: 0;
+/* day-top is the actual container for dayCellContent; full width, grow but don't collapse */
+.admin-calendar .fc-daygrid-day-top {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: stretch !important;
+	flex: 1 1 auto !important;
+	min-height: 0 !important;
+	min-width: 0 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+/* inner wrapper for dayCellContent – full width, let content size naturally so it doesn't collapse */
+.admin-calendar .fc-daygrid-day-top > * {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: stretch !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	flex: 1 1 auto !important;
+	min-height: 0 !important;
+	box-sizing: border-box !important;
+}
+
+/* ensure admin-day-cell (dayCellContent output) is full width */
+.admin-calendar .fc-daygrid-day-top .admin-day-cell {
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
 }
 
 /* Override public calendar styles for admin calendar */
@@ -1240,18 +1287,31 @@ small,
 	@apply text-zinc-400;
 }
 
+/* Agenda (list) view: closed day = red */
+.admin-calendar .fc-list-day.fc-day-unavailable .fc-list-day-cushion,
+.admin-calendar .fc-list .fc-list-day.fc-day-unavailable .fc-list-day-cushion {
+	background-color: #fee2e2 !important;
+	color: #991b1b;
+}
+.admin-calendar .fc-list-day.fc-day-unavailable .fc-list-day-text,
+.admin-calendar .fc-list .fc-list-day.fc-day-unavailable .fc-list-day-text {
+	color: #991b1b;
+}
+
 /* ============================================
    Admin Calendar - Day Cell Component Styles
    ============================================ */
 
 .admin-day-cell {
-	display: flex;
-	flex-direction: column;
-	height: 100%;
-	width: 100%;
-	padding: 0.375rem 0.5rem;
-	box-sizing: border-box;
-	position: relative;
+	display: flex !important;
+	flex-direction: column !important;
+	height: 100% !important;
+	width: 100% !important;
+	min-width: 0 !important;
+	max-width: 100% !important;
+	padding: 0.375rem 0.5rem !important;
+	box-sizing: border-box !important;
+	position: relative !important;
 }
 
 /* Day number */
@@ -1337,15 +1397,34 @@ small,
 	z-index: 10;
 }
 
-/* Day events container */
+/* Day events container - full width so timeslots span day cell; size to content so timeslots are visible */
 .admin-day-events {
-	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: 0.3rem;
-	min-height: 0;
-	overflow: hidden;
-	margin-top: 2.6rem;
+	flex: 1 1 auto !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: stretch !important;
+	gap: 0.3rem !important;
+	min-height: auto !important;
+	min-width: 0 !important;
+	overflow: visible !important;
+	margin-top: 2.6rem !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+.admin-day-events > * {
+	min-width: 0 !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+}
+
+/* Month view: force colored timeslots to full width - override any FC or layout */
+.admin-calendar .admin-day-events .timeslot-month,
+.admin-calendar .admin-day-events .timeslot-month-block {
+	width: 100% !important;
+	max-width: 100% !important;
+	min-width: 0 !important;
+	box-sizing: border-box !important;
 }
 
 /* Appointment bubbles */
@@ -1507,7 +1586,14 @@ small,
    ============================================ */
 
 @media (max-width: 640px) {
-	/* Month view: clean minimal layout */
+	/* Month view: smaller weekday row */
+	.admin-calendar .fc-daygrid-view .fc-col-header-cell {
+		font-size: 0.5625rem;
+		padding: 0.25rem 0.125rem;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+	/* Month view: background by availability (no text), one number = appointment count when > 0 */
 	.admin-calendar .fc-daygrid-view .fc-scrollgrid-section > table {
 		border-spacing: 0.375rem;
 	}
@@ -1515,7 +1601,7 @@ small,
 		min-height: 3.5rem;
 	}
 	.admin-calendar .fc-daygrid-day-frame {
-		background-color: #f3f4f6;
+		background-color: transparent;
 		border: none;
 		display: flex;
 		align-items: center;
@@ -1523,51 +1609,89 @@ small,
 	}
 	.admin-day-cell {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 0;
+		gap: 0.125rem;
+		padding: 0.25rem;
 		width: 100%;
 		height: 100%;
+		position: relative;
+		border-radius: 0.25rem;
 	}
+	/* Available day: subtle green background, no text */
+	.admin-day-cell.admin-day-available {
+		background-color: #d1fae5;
+	}
+	/* Not available (closed) day: red background, no text */
+	.admin-day-cell.admin-day-unavailable {
+		background-color: #fee2e2;
+	}
+	/* Day number on top – smaller on mobile */
 	.admin-day-number {
 		position: static;
-		font-size: 0.9375rem;
-		font-weight: 500;
+		font-size: 0.75rem;
+		font-weight: 600;
 		color: #374151;
 		width: auto;
 		height: auto;
+		line-height: 1;
+		order: 0;
 	}
+	.admin-day-cell.admin-day-available .admin-day-number {
+		color: #065f46;
+	}
+	.admin-day-cell.admin-day-unavailable .admin-day-number {
+		color: #991b1b;
+	}
+	/* Hide status and events text on mobile */
 	.admin-day-status,
-	.admin-day-events,
-	.admin-day-appointment-count-mobile {
-		display: none;
+	.admin-day-events {
+		display: none !important;
 	}
-	/* Selected day: amber background */
-	.admin-calendar .fc-daygrid-day.fc-admin-day-selected .fc-daygrid-day-frame {
-		background-color: #f59e0b;
+	/* Appointment count under the day number (only when > 0); in flow, not absolute */
+	.admin-day-appointment-count-mobile {
+		display: flex !important;
+		position: static;
+		order: 1;
+		background-color: #3b82f6;
+		color: white;
+		border-radius: 0.5rem;
+		min-width: 1.25rem;
+		height: 1.125rem;
+		padding: 0 0.25rem;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.625rem;
+		font-weight: 600;
+		line-height: 1;
+	}
+	/* Selected day: amber background on cell */
+	.admin-calendar .fc-daygrid-day.fc-admin-day-selected .admin-day-cell {
+		background-color: #f59e0b !important;
 	}
 	.admin-calendar .fc-daygrid-day.fc-admin-day-selected .admin-day-number {
 		color: white;
 		font-weight: 600;
 	}
-	/* Unavailable days when selected: keep gray background, no amber */
+	/* Unavailable (closed) when selected: keep red */
 	.admin-calendar
 		.fc-daygrid-day.fc-day-unavailable.fc-admin-day-selected
-		.fc-daygrid-day-frame {
-		background-color: #f3f4f6;
+		.admin-day-cell {
+		background-color: #fecaca !important;
 	}
 	.admin-calendar
 		.fc-daygrid-day.fc-day-unavailable.fc-admin-day-selected
 		.admin-day-number {
-		color: #374151;
-		font-weight: 500;
+		color: #991b1b;
+		font-weight: 600;
 	}
-	/* Today: amber border, white background */
+	/* Today, not selected: white cell, amber border */
 	.admin-calendar
 		.fc-daygrid-day.fc-day-today:not(.fc-admin-day-selected)
-		.fc-daygrid-day-frame {
-		background-color: white;
-		border: 2px solid #f59e0b;
+		.admin-day-cell {
+		background-color: white !important;
+		box-shadow: inset 0 0 0 2px #f59e0b;
 	}
 	.admin-calendar
 		.fc-daygrid-day.fc-day-today:not(.fc-admin-day-selected)
@@ -1579,7 +1703,7 @@ small,
 		border-radius: 0;
 	}
 
-	/* Week view: horizontal scroll, hide time slot events */
+	/* Week view: horizontal scroll; day headers and timeslots styled below */
 	.admin-calendar .fc-timeGridWeek-view .fc-scrollgrid {
 		overflow-x: auto;
 		overflow-y: auto;
@@ -1588,12 +1712,32 @@ small,
 	.admin-calendar .fc-timeGridWeek-view .fc-col-header-cell {
 		min-width: 8rem;
 	}
+	/* Week view: smaller weekday/date in header */
 	.admin-calendar .fc-timeGridWeek-view .fc-col-header-cell {
-		font-size: 0.625rem;
-		padding: 0.5rem 0.375rem;
+		font-size: 0.5625rem;
+		padding: 0.375rem 0.25rem;
 	}
-	.admin-calendar .fc-timeGridWeek-view .admin-calendar-event--time {
-		display: none;
+	/* Mobile week: day header by status – available = green, closed = red */
+	.admin-calendar .fc-timeGridWeek-view .fc-col-header-cell.fc-day-available {
+		background-color: #d1fae5;
+		color: #065f46;
+		font-weight: 600;
+	}
+	.admin-calendar .fc-timeGridWeek-view .fc-col-header-cell.fc-day-unavailable {
+		background-color: #fee2e2;
+		color: #991b1b;
+		font-weight: 600;
+	}
+	/* Mobile week: timeslots (events) – visible, distinct from day header, stronger borders */
+	.admin-calendar .fc-timeGridWeek-view .fc-timegrid-event {
+		border-width: 2px !important;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+		font-size: 0.6875rem;
+		padding: 3px 6px;
+		min-height: 1.75rem;
+	}
+	.admin-calendar .fc-timeGridWeek-view .fc-timegrid-event .fc-event-main {
+		color: inherit;
 	}
 
 	/* Day view: show appointments, optimize layout */
@@ -1603,7 +1747,8 @@ small,
 	}
 	.admin-calendar .fc-timeGridDay-view .fc-timegrid-event {
 		font-size: 0.8125rem;
-		padding: 0.25rem 0.375rem;
+		margin: 0;
+		padding: 0;
 	}
 
 	/* Toolbar */
@@ -1716,9 +1861,9 @@ small,
 	margin: 0;
 }
 
-/* Admin calendar: default overflow for timegrid events */
+/* Admin calendar: allow overflow so timeslot popover can show on hover */
 .admin-calendar .fc-timegrid-event-harness {
-	overflow: hidden;
+	overflow: visible;
 }
 
 /* ============================================
@@ -1756,6 +1901,31 @@ small,
 	pointer-events: none;
 }
 
+/* Timeslots: same min height so all slots look equal; layout handled in component */
+/* Admin timeslots: consistent padding/margin, no double spacing */
+.admin-calendar .fc-timegrid-event {
+	margin: 0;
+	padding: 0;
+}
+.admin-calendar .fc-timegrid-event .fc-event-main,
+.admin-calendar .fc-timegrid-event .fc-event-title {
+	margin: 0;
+	padding: 0;
+	overflow: visible;
+}
+
+/* Timeslot popover: above sticky toolbar and all admin UI */
+.admin-calendar .timeslot-popover {
+	z-index: 2147483647;
+}
+
+/* Timeslot: show full info when event is hovered or has focus-within */
+.admin-calendar .fc-timegrid-event:hover .timeslot-popover,
+.admin-calendar .fc-timegrid-event:focus-within .timeslot-popover,
+.admin-calendar .group:focus-within .timeslot-popover {
+	opacity: 1;
+}
+
 /* Subtle but visible "now" indicator in admin calendar */
 .admin-calendar .fc-timegrid-now-indicator-line {
 	border-width: 1px;
@@ -1766,10 +1936,11 @@ small,
 	opacity: 0.75;
 }
 
-/* TimeGrid: differentiate past / current / future slots */
+/* TimeGrid: past hours = not available (same as unavailable), current, future */
 .admin-calendar
 	.fc-timegrid-slot.fc-timegrid-slot-lane.fc-past:not(.fc-timegrid-slot-minor) {
-	@apply bg-gray-50;
+	@apply bg-gray-200 cursor-not-allowed;
+	pointer-events: none;
 }
 
 .admin-calendar
@@ -1784,8 +1955,8 @@ small,
 	@apply bg-white;
 }
 
-/* Hover & selection feedback for time slots */
-.admin-calendar .fc-timegrid-slot.fc-timegrid-slot-lane:hover {
+/* Hover & selection feedback for time slots (only future slots are interactive) */
+.admin-calendar .fc-timegrid-slot.fc-timegrid-slot-lane.fc-future:hover {
 	@apply bg-gray-50;
 }
 

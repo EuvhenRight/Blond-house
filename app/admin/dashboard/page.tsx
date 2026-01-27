@@ -222,6 +222,13 @@ export default function AdminDashboard() {
 						</div>
 						<div className='flex items-center gap-2 sm:gap-4 w-full sm:w-auto'>
 							<a
+								href='/admin/analytics'
+								className='text-xs sm:text-sm text-zinc-600 hover:text-zinc-900 font-medium transition-colors px-2 sm:px-3 py-1.5 sm:py-2 rounded-md hover:bg-zinc-100 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
+								aria-label='View analytics'
+							>
+								Analytics
+							</a>
+							<a
 								href='/book'
 								className='text-xs sm:text-sm text-zinc-600 hover:text-zinc-900 font-medium transition-colors px-2 sm:px-3 py-1.5 sm:py-2 rounded-md hover:bg-zinc-100 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
 								aria-label='View public booking page'

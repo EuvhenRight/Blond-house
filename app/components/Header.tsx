@@ -1,13 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
 import { FiMenu, FiX } from 'react-icons/fi'
 import { navigation } from '../lib/constants'
 
 export default function Header() {
 	const pathname = usePathname()
+	const router = useRouter()
 	const isBookingPage = pathname === '/book'
 	const isAdminPage = pathname?.startsWith('/admin')
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -18,21 +19,30 @@ export default function Header() {
 	}
 
 	const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-		if (href.startsWith('#')) {
-			e.preventDefault()
-			setIsMobileMenuOpen(false) // Close mobile menu when clicking anchor link
-			const element = document.querySelector(href)
-			if (element) {
-				const headerOffset = 80
-				const elementPosition = element.getBoundingClientRect().top
-				const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+		if (!href.startsWith('#')) return
+		e.preventDefault()
+		setIsMobileMenuOpen(false)
 
-				window.scrollTo({
-					top: offsetPosition,
-					behavior: 'smooth',
-				})
+		const isHome = pathname === '/' || pathname === ''
+
+		// Condition 1: From main page (/) – scroll to the right area
+		if (isHome) {
+			const el = document.querySelector(href) as HTMLElement
+			if (el) {
+				// scroll-margin-top on #about/#services in globals.css handles header offset
+				el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+			} else {
+				// Retry after a short delay in case DOM isn’t ready
+				setTimeout(() => {
+					const retry = document.querySelector(href) as HTMLElement
+					if (retry) retry.scrollIntoView({ behavior: 'smooth', block: 'start' })
+				}, 100)
 			}
+			return
 		}
+
+		// Condition 2: From another page – go to main page and land in the right area
+		router.push(`/${href}`)
 	}
 
 	return (
@@ -61,14 +71,14 @@ export default function Header() {
 							Book Appointment
 						</Link>
 						{navigation.header.map(item => (
-							<Link
+							<a
 								key={item.href}
 								href={item.href}
 								onClick={e => handleAnchorClick(e, item.href)}
-								className='hover:text-zinc-900 transition-colors'
+								className='hover:text-zinc-900 transition-colors cursor-pointer'
 							>
 								{item.label}
-							</Link>
+							</a>
 						))}
 					</nav>
 				)}
@@ -157,14 +167,14 @@ export default function Header() {
 							Book Appointment
 						</Link>
 						{navigation.header.map((item, index) => (
-							<Link
+							<a
 								key={item.href}
 								href={item.href}
 								onClick={e => {
 									handleAnchorClick(e, item.href)
 									setIsMobileMenuOpen(false)
 								}}
-								className={`font-medium text-zinc-600 hover:text-zinc-900 transition-all duration-300 ${
+								className={`font-medium text-zinc-600 hover:text-zinc-900 transition-all duration-300 cursor-pointer ${
 									isMobileMenuOpen
 										? 'opacity-100 translate-y-0'
 										: 'opacity-0 -translate-y-2'
@@ -176,7 +186,7 @@ export default function Header() {
 								}}
 							>
 								{item.label}
-							</Link>
+							</a>
 						))}
 					</nav>
 				</div>

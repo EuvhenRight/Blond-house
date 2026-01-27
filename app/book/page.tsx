@@ -9,7 +9,6 @@ import PublicCalendar from '../components/booking/PublicCalendar'
 import SelectedServiceDisplay from '../components/booking/SelectedServiceDisplay'
 import ServiceSelector from '../components/booking/ServiceSelector'
 import TimeSlotSelector from '../components/booking/TimeSlotSelector'
-import GlassSection from '../components/GlassSection'
 import { useBooking } from '../hooks/useBooking'
 import { getServiceById } from '../lib/services'
 
@@ -142,32 +141,33 @@ function BookPageContent() {
 						</p>
 					</header>
 
-					{/* Main Content in Glass Section */}
-					<GlassSection
-						isVisible={isVisible}
-						position='center'
-						animationType='bottom'
-						delay={100}
-						padding='md'
-						blur='md'
-						className='bg-white/60'
-						showProse={false}
+					{/* Main Content in Glass Section - No transforms to allow sticky children */}
+					<div 
+						className={`backdrop-blur-md border border-zinc-200/80 rounded-2xl bg-white/60 p-5 sm:p-7 md:p-8 transition-opacity duration-1200 ease-in-out ${
+							isVisible ? 'opacity-100' : 'opacity-0'
+						}`}
+						style={{
+							transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+							transitionDelay: '100ms',
+						}}
 					>
 						{/* Progress Indicator */}
 						<div className='sticky top-17 z-20 bg-white/95 backdrop-blur supports-backdrop-filter:backdrop-blur-sm rounded-lg shadow-sm px-2.5 py-2 mb-3 transition-all duration-300'>
 							<BookingProgress currentStep={getCurrentStep()} />
 						</div>
 
-						<div className='grid gap-6 sm:gap-8 lg:grid-cols-3'>
-						{/* Calendar Section - 2/3 width */}
-						<section
-							className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-2'
-							aria-labelledby={
-								!bookingState.selectedServiceId
-									? 'service-selection-heading'
-									: 'date-selection-heading'
-							}
-						>
+						{/* Grid container for calendar and sidebar - Wrapper to control sticky stop position */}
+						<div className='relative min-h-0'>
+							<div className='grid gap-6 sm:gap-8 lg:grid-cols-3 lg:items-start min-h-0'>
+							{/* Calendar Section - 2/3 width */}
+							<section
+								className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-2'
+								aria-labelledby={
+									!bookingState.selectedServiceId
+										? 'service-selection-heading'
+										: 'date-selection-heading'
+								}
+							>
 							{!bookingState.selectedServiceId && (
 								<h2
 									id='service-selection-heading'
@@ -207,9 +207,9 @@ function BookPageContent() {
 							)}
 						</section>
 
-						{/* Booking Section - 1/3 width */}
+						{/* Booking Section - 1/3 width - Sticky on desktop */}
 						<aside
-							className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-1 flex flex-col sticky top-46 h-fit'
+							className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-1 flex flex-col lg:sticky lg:top-40 lg:self-start'
 							aria-label='Booking details sidebar'
 						>
 							{(!bookingState.selectedServiceId || isReadyToBook) && (
@@ -256,8 +256,9 @@ function BookPageContent() {
 								/>
 							)}
 						</aside>
+							</div>
 						</div>
-					</GlassSection>
+					</div>
 				</div>
 			</main>
 		</div>

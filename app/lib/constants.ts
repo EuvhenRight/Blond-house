@@ -5,9 +5,9 @@
 
 export const siteConfig = {
 	name: 'Yuriy Pantel',
-	tagline: 'Hair design. Amsterdam.',
-	description: 'Balance.',
-	description_2: 'Precision.',
+	tagline: 'Experience',
+	description: 'your beauty,',
+	description_2: 'naturally',
 	description_3: 'Flow.',
 	location: 'Amsterdam',
 	address: 'Warmoesstraat 155, floor 3, Amsterdam',

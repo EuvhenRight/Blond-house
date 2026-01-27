@@ -1,38 +1,38 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { FiMail, FiMapPin, FiPhone } from 'react-icons/fi'
 import { ImWhatsapp } from 'react-icons/im'
 import { navigation, siteConfig } from '../lib/constants'
 
 export default function Footer() {
 	const pathname = usePathname()
-	const router = useRouter()
 	const isBookingPage = pathname === '/book'
 
 	const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-		if (href.startsWith('#')) {
-			e.preventDefault()
-			
-			// If on booking page, navigate to home page first with hash
-			if (isBookingPage) {
-				router.push(`/${href}`)
-			} else {
-				// If already on home page, just scroll
-				const element = document.querySelector(href)
-				if (element) {
-					const headerOffset = 80
-					const elementPosition = element.getBoundingClientRect().top
-					const offsetPosition = elementPosition + window.pageYOffset - headerOffset
+		if (!href.startsWith('#')) return
+		e.preventDefault()
 
-					window.scrollTo({
-						top: offsetPosition,
-						behavior: 'smooth',
-					})
-				}
+		const isHome = pathname === '/' || pathname === ''
+
+		// Condition 1: From main page (/) – scroll to the right area
+		if (isHome) {
+			const el = document.querySelector(href) as HTMLElement
+			if (el) {
+				// scroll-margin-top on #about/#services in globals.css handles header offset
+				el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+			} else {
+				setTimeout(() => {
+					const retry = document.querySelector(href) as HTMLElement
+					if (retry) retry.scrollIntoView({ behavior: 'smooth', block: 'start' })
+				}, 100)
 			}
+			return
 		}
+
+		// Condition 2: From another page – go to main page and land in the right area
+		window.location.href = `/${href}`
 	}
 
 	return (
@@ -70,14 +70,14 @@ export default function Footer() {
 								Book Appointment
 							</Link>
 							{navigation.header.map(item => (
-								<Link
+								<a
 									key={item.href}
 									href={item.href}
 									onClick={e => handleAnchorClick(e, item.href)}
-									className='text-zinc-600 hover:text-amber-600 transition-all duration-300 hover:scale-105 inline-block'
+									className='text-zinc-600 hover:text-amber-600 transition-all duration-300 hover:scale-105 inline-block cursor-pointer'
 								>
 									{item.label}
-								</Link>
+								</a>
 							))}
 							{/* Legal Links */}
 							{navigation.footer.map(item => (

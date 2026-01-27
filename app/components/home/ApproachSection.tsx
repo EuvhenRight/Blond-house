@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import GlassSection from '../GlassSection'
 
 const portfolioImages = [
-	{ src: '/images/IMG_2106.jpg', alt: 'Hair design work - long wavy brown hair with golden highlights' },
+	{ src: '/images/IMG_2162.jpg', alt: 'Hair design work - long wavy brown hair with golden highlights' },
 	{ src: '/images/IMG_2112.jpeg', alt: 'Hair design work - blonde balayage with natural waves' },
 	{ src: '/images/IMG_2117.jpg', alt: 'Hair design work - creative color with purple and blonde' },
 	{ src: '/images/IMG_2120.jpg', alt: 'Hair design work - voluminous blonde waves' },
@@ -75,13 +75,14 @@ export default function ApproachSection() {
 		}
 	}, [])
 
+
 	return (
 		<section
 			ref={approachSectionRef}
 			className='relative py-12 sm:py-16 md:py-20'
 		>
 			<div className='mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-12'>
-				<div className='grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12'>
+				<div className='grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start'>
 					{/* Portfolio Gallery - Left side */}
 					<div className='order-2 lg:order-1'>
 						<div className='grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-full'>
@@ -105,8 +106,8 @@ export default function ApproachSection() {
 						</div>
 					</div>
 
-					{/* Glass effect text sections - Right side - Sticky, moves with gallery */}
-					<div className='order-1 lg:order-2 relative z-10 space-y-6 lg:space-y-8 lg:sticky lg:top-12 lg:h-fit lg:self-start'>
+					{/* Glass effect text sections - Right side */}
+					<div className='order-1 lg:order-2 relative z-10 space-y-6 lg:space-y-8'>
 						{/* Approach and Experience */}
 						<GlassSection isVisible={isApproachVisible} position='right'>
 							<div className='text-left mb-8 sm:mb-12'>
@@ -132,8 +133,8 @@ export default function ApproachSection() {
 							</div>
 						</GlassSection>
 
-						{/* Who This Studio Is For */}
-						<div ref={whoSectionRef}>
+						{/* Who This Studio Is For - Sticky on desktop */}
+						<div ref={whoSectionRef} className='lg:sticky lg:top-24 lg:self-start'>
 							<GlassSection isVisible={isWhoVisible} position='right' animationType='right' delay={300}>
 								<div className='text-left mb-8 sm:mb-12'>
 									<h2 className='font-bold text-zinc-900 mb-6 sm:mb-8'>
