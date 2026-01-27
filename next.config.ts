@@ -8,17 +8,7 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year cache
     qualities: [75, 85, 90], // Support quality values used in Image components
   },
-  // Redirect www to apex for blondhouse.nl (canonical domain)
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'www.blondhouse.nl' }],
-        destination: 'https://blondhouse.nl/:path*',
-        permanent: true,
-      },
-    ];
-  },
+  // www → apex is handled in middleware.ts to avoid redirect loops
 };
 
 export default nextConfig;

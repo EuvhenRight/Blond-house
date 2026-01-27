@@ -2,8 +2,19 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
+const APEX_HOST = 'blondhouse.nl'
+const WWW_HOST = 'www.blondhouse.nl'
+
 export async function middleware(request: NextRequest) {
-	const { pathname } = request.nextUrl
+	const { pathname, search } = request.nextUrl
+	const host = request.headers.get('host') ?? request.nextUrl.hostname
+
+	// Redirect www → apex (canonical) to avoid redirect loops with hosting
+	if (host === WWW_HOST || host.toLowerCase() === WWW_HOST) {
+		const apexUrl = new URL(pathname + search, `https://${APEX_HOST}`)
+		return NextResponse.redirect(apexUrl, 308)
+	}
+
 	const response = NextResponse.next()
 
 	// Only protect admin routes
@@ -64,13 +75,9 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
 	matcher: [
-		/*
-		 * Match all request paths except for the ones starting with:
-		 * - api (API routes)
-		 * - _next/static (static files)
-		 * - _next/image (image optimization files)
-		 * - favicon.ico (favicon file)
-		 */
-		'/((?!api|_next/static|_next/image|favicon.ico).*)',
+		// Match all paths so www→apex redirect runs for every request (including /api).
+		// Exclude only internal Next.js assets to avoid breaking static/files.
+		'/((?!_next/static|_next/image|favicon\\.ico).*)',
+		'/', // root
 	],
 }

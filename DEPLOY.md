@@ -30,12 +30,12 @@ Use the template in **`env.example`**. Copy those keys into your host’s enviro
 ## 3. Domain (blondhouse.nl)
 
 - **Preferred domain:** `blondhouse.nl` (apex).
-- **www:** The app redirects `www.blondhouse.nl` → `https://blondhouse.nl` (see `next.config.ts`).
+- **www:** The app redirects `www.blondhouse.nl` → `https://blondhouse.nl` in **middleware** (early, before anything else) to avoid redirect loops.
 
 ### If you use Vercel
 
 1. Project → **Settings** → **Domains**.
-2. Add `blondhouse.nl` and optionally `www.blondhouse.nl`.
+2. Add `blondhouse.nl` as primary and `www.blondhouse.nl`. Do **not** set “Redirect apex → www” or you’ll get “redirected too many times”.
 3. Follow Vercel’s DNS instructions (A/CNAME for your registrar).
 4. In **Environment Variables**, set `NEXT_PUBLIC_SITE_URL=https://blondhouse.nl` and `NEXTAUTH_URL=https://blondhouse.nl` for **Production**.
 
