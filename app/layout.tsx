@@ -57,7 +57,7 @@ export const metadata: Metadata = {
 		description: seo.defaultDescription,
 		images: [
 			{
-				url: seo.defaultImagePath,
+				url: seo.defaultImageUrl,
 				width: OG_IMAGE_WIDTH,
 				height: OG_IMAGE_HEIGHT,
 				alt: seo.defaultImageAlt,
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
 		description: seo.defaultDescription,
 		images: [
 			{
-				url: seo.defaultImagePath,
+				url: seo.defaultImageUrl,
 				width: OG_IMAGE_WIDTH,
 				height: OG_IMAGE_HEIGHT,
 				alt: seo.defaultImageAlt,

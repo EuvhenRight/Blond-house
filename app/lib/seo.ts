@@ -22,7 +22,7 @@ function getDefaultImagePath(): string {
 	return SEO_DEFAULT_IMAGE_PATH
 }
 
-/** Full absolute URL for the default share image */
+/** Full absolute URL for the default share image. Telegram requires absolute URLs for og:image. */
 export function getDefaultImageUrl(): string {
 	return `${siteUrl}${getDefaultImagePath()}`
 }

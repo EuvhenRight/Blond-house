@@ -184,7 +184,7 @@ export default function HeroSection() {
 					}}
 				>
 					<Image
-						src={isMobile ? '/images/GirlMob.png' : '/images/GoldGirl18.png'}
+						src={isMobile ? '/images/GirlMobile.png' : '/images/GoldGirl18.png'}
 						alt='Hair design studio in Amsterdam'
 						fill
 						priority
