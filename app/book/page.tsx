@@ -50,13 +50,13 @@ function BookPageContent() {
 		}
 	}, [serviceParam, setSelectedService])
 
-	// After choosing a service, scroll to calendar (month / available days)
+	// After choosing a service, scroll so calendar (month / agenda) sits at the bottom
 	useEffect(() => {
 		if (!bookingState.selectedServiceId) return
 		const t = setTimeout(() => {
 			calendarSectionRef.current?.scrollIntoView({
 				behavior: 'smooth',
-				block: 'start',
+				block: 'end',
 			})
 		}, 150)
 		return () => clearTimeout(t)
@@ -162,21 +162,21 @@ function BookPageContent() {
 	return (
 		<div className='min-h-screen relative'>
 			<main className='w-full py-4 sm:py-4 md:py-6 lg:py-6' role='main'>
-				<div className='mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-12'>
+				<div className='mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 xl:px-12'>
 					{/* Back to Home Link */}
 					<Link
 						href='/'
-						className='inline-block mb-6 text-amber-600 hover:text-amber-700 transition-colors'
+						className='inline-block mb-4 sm:mb-6 text-sm sm:text-base text-amber-600 hover:text-amber-700 transition-colors'
 					>
 						← Back to Home
 					</Link>
 
 					{/* Page Header */}
-					<header className='text-center mb-8 sm:mb-12'>
-						<h3 className='text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-zinc-900 mb-4 sm:mb-6'>
+					<header className='text-center mb-5 sm:mb-8 md:mb-12'>
+						<h3 className='text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-zinc-900 mb-2 sm:mb-4 md:mb-6'>
 							Book an Appointment
 						</h3>
-						<p className='text-xs sm:text-sm md:text-base text-zinc-600 max-w-2xl mx-auto'>
+						<p className='text-xs sm:text-sm md:text-base text-zinc-600 max-w-2xl mx-auto px-1'>
 							Select your service, choose a date and time, and complete your
 							booking
 						</p>
@@ -184,7 +184,7 @@ function BookPageContent() {
 
 					{/* Main Content in Glass Section - No transforms to allow sticky children */}
 					<div 
-						className={`backdrop-blur-md border border-zinc-200/80 rounded-2xl bg-white/60 p-5 sm:p-7 md:p-8 transition-opacity duration-1200 ease-in-out ${
+						className={`backdrop-blur-md border border-zinc-200/80 rounded-2xl bg-white/60 p-3 sm:p-5 md:p-6 lg:p-8 transition-opacity duration-1200 ease-in-out ${
 							isVisible ? 'opacity-100' : 'opacity-0'
 						}`}
 						style={{
@@ -193,16 +193,16 @@ function BookPageContent() {
 						}}
 					>
 						{/* Progress Indicator */}
-						<div className='sticky top-17 z-20 bg-white/95 backdrop-blur supports-backdrop-filter:backdrop-blur-sm rounded-lg shadow-sm px-2.5 py-2 mb-3 transition-all duration-300'>
+						<div className='sticky top-17 z-20 bg-white/95 backdrop-blur supports-backdrop-filter:backdrop-blur-sm rounded-lg shadow-sm px-2 sm:px-2.5 py-2 mb-2 sm:mb-3 transition-all duration-300'>
 							<BookingProgress currentStep={getCurrentStep()} />
 						</div>
 
 						{/* Grid container for calendar and sidebar - Wrapper to control sticky stop position */}
 						<div className='relative min-h-0'>
-							<div className='grid gap-6 sm:gap-8 lg:grid-cols-3 lg:items-start min-h-0'>
-							{/* Calendar Section - 2/3 width */}
+							<div className='grid gap-4 sm:gap-6 lg:gap-8 lg:grid-cols-3 lg:items-start min-h-0'>
+							{/* Calendar Section - 2/3 width on desktop, full on mobile */}
 							<section
-								className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-2'
+								className='bg-white rounded-2xl shadow-lg p-3 sm:p-4 lg:p-6 lg:col-span-2'
 								aria-labelledby={
 									!bookingState.selectedServiceId
 										? 'service-selection-heading'
@@ -212,7 +212,7 @@ function BookPageContent() {
 							{!bookingState.selectedServiceId && (
 								<h2
 									id='service-selection-heading'
-									className='text-xl sm:text-2xl font-bold text-zinc-900 mb-4 sm:mb-6'
+									className='text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 mb-3 sm:mb-4 md:mb-6'
 								>
 									Select Service
 								</h2>
@@ -254,13 +254,13 @@ function BookPageContent() {
 							)}
 						</section>
 
-						{/* Booking Section - 1/3 width - Sticky on desktop */}
+						{/* Booking Section - 1/3 width on desktop, full on mobile - Sticky on desktop */}
 						<aside
-							className='bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:col-span-1 flex flex-col lg:sticky lg:top-40 lg:self-start'
+							className='bg-white rounded-2xl shadow-lg p-3 sm:p-4 lg:p-6 lg:col-span-1 flex flex-col lg:sticky lg:top-40 lg:self-start'
 							aria-label='Booking details sidebar'
 						>
 							{(!bookingState.selectedServiceId || isReadyToBook) && (
-								<h2 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-4 sm:mb-6'>
+								<h2 className='text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 mb-3 sm:mb-4 md:mb-6'>
 									{!bookingState.selectedServiceId
 										? 'Service Selection'
 										: 'Booking Details'}
@@ -269,7 +269,7 @@ function BookPageContent() {
 
 							{bookingState.selectedDate && (
 								<>
-									<h2 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-4 sm:mb-6'>
+									<h2 className='text-lg sm:text-xl md:text-2xl font-bold text-zinc-900 mb-3 sm:mb-4 md:mb-6'>
 										Select time
 									</h2>
 									<div
@@ -289,7 +289,7 @@ function BookPageContent() {
 							)}
 
 							{!bookingState.selectedServiceId && (
-								<div className='text-center py-12 text-zinc-600'>
+								<div className='text-center py-6 sm:py-8 md:py-12 text-sm sm:text-base text-zinc-600'>
 									Please select a service to continue with your booking
 								</div>
 							)}
