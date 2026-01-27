@@ -35,6 +35,11 @@ function BookPageContent() {
 	const lastLoadedDateRef = useRef<string | null>(null)
 	const lastLoadedServiceRef = useRef<string | null>(null)
 
+	// Refs for scroll targets: calendar (available days), timeslots, confirm booking
+	const calendarSectionRef = useRef<HTMLDivElement>(null)
+	const timeslotsSectionRef = useRef<HTMLDivElement>(null)
+	const confirmBookingSectionRef = useRef<HTMLDivElement>(null)
+
 	// Update selected service if service param changes
 	useEffect(() => {
 		if (serviceParam) {
@@ -44,6 +49,42 @@ function BookPageContent() {
 			}
 		}
 	}, [serviceParam, setSelectedService])
+
+	// After choosing a service, scroll to calendar (month / available days)
+	useEffect(() => {
+		if (!bookingState.selectedServiceId) return
+		const t = setTimeout(() => {
+			calendarSectionRef.current?.scrollIntoView({
+				behavior: 'smooth',
+				block: 'start',
+			})
+		}, 150)
+		return () => clearTimeout(t)
+	}, [bookingState.selectedServiceId])
+
+	// After choosing a date, scroll so "Select time" / timeslots sit at the bottom of the viewport
+	useEffect(() => {
+		if (!bookingState.selectedDate) return
+		const t = setTimeout(() => {
+			timeslotsSectionRef.current?.scrollIntoView({
+				behavior: 'smooth',
+				block: 'end',
+			})
+		}, 150)
+		return () => clearTimeout(t)
+	}, [bookingState.selectedDate])
+
+	// After choosing a time, scroll so confirm booking / BookingForm sits at the bottom
+	useEffect(() => {
+		if (!isReadyToBook) return
+		const t = setTimeout(() => {
+			confirmBookingSectionRef.current?.scrollIntoView({
+				behavior: 'smooth',
+				block: 'end',
+			})
+		}, 150)
+		return () => clearTimeout(t)
+	}, [isReadyToBook])
 
 	const handleDateSelect = useCallback(
 		async (date: string) => {
@@ -188,21 +229,27 @@ function BookPageContent() {
 										Select Date and Time
 									</h2>
 									<div className='-mx-4 sm:-mx-6 md:mx-0 mb-6'>
-									<SelectedServiceDisplay
-										serviceId={bookingState.selectedServiceId}
-										onChange={() => setSelectedService(null)}
-									/>
+										<SelectedServiceDisplay
+											serviceId={bookingState.selectedServiceId}
+											onChange={() => setSelectedService(null)}
+										/>
 									</div>
-									<PublicCalendar
-										onDateSelect={handleDateSelect}
-										selectedDate={bookingState.selectedDate}
-										serviceDurationMinutes={
-											bookingState.selectedServiceId
-												? getServiceById(bookingState.selectedServiceId)
-														?.duration || null
-												: null
-										}
-									/>
+									<div
+										ref={calendarSectionRef}
+										id='booking-calendar'
+										className='scroll-mt-24'
+									>
+										<PublicCalendar
+											onDateSelect={handleDateSelect}
+											selectedDate={bookingState.selectedDate}
+											serviceDurationMinutes={
+												bookingState.selectedServiceId
+													? getServiceById(bookingState.selectedServiceId)
+															?.duration || null
+													: null
+											}
+										/>
+									</div>
 								</>
 							)}
 						</section>
@@ -225,13 +272,19 @@ function BookPageContent() {
 									<h2 className='text-xl sm:text-2xl font-bold text-zinc-900 mb-4 sm:mb-6'>
 										Select time
 									</h2>
-									<TimeSlotSelector
-										availableSlots={bookingState.availableSlots}
-										selectedTime={bookingState.selectedTime}
-										selectedDate={bookingState.selectedDate}
-										onTimeSelect={setSelectedTime}
-										isLoading={false}
-									/>
+									<div
+										ref={timeslotsSectionRef}
+										id='booking-timeslots'
+										className='scroll-mt-24'
+									>
+										<TimeSlotSelector
+											availableSlots={bookingState.availableSlots}
+											selectedTime={bookingState.selectedTime}
+											selectedDate={bookingState.selectedDate}
+											onTimeSelect={setSelectedTime}
+											isLoading={false}
+										/>
+									</div>
 								</>
 							)}
 
@@ -248,12 +301,18 @@ function BookPageContent() {
 						)}
 
 							{isReadyToBook && (
-								<BookingForm
-									selectedDate={bookingState.selectedDate!}
-									selectedTime={bookingState.selectedTime!}
-									selectedServiceId={bookingState.selectedServiceId!}
-									onBookingSuccess={handleBookingSuccess}
-								/>
+								<div
+									ref={confirmBookingSectionRef}
+									id='booking-confirm'
+									className='scroll-mt-24'
+								>
+									<BookingForm
+										selectedDate={bookingState.selectedDate!}
+										selectedTime={bookingState.selectedTime!}
+										selectedServiceId={bookingState.selectedServiceId!}
+										onBookingSuccess={handleBookingSuccess}
+									/>
+								</div>
 							)}
 						</aside>
 							</div>

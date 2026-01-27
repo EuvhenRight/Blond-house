@@ -39,6 +39,19 @@ Use the template in **`env.example`**. Copy those keys into your host’s enviro
 3. Follow Vercel’s DNS instructions (A/CNAME for your registrar).
 4. In **Environment Variables**, set `NEXT_PUBLIC_SITE_URL=https://blondhouse.nl` and `NEXTAUTH_URL=https://blondhouse.nl` for **Production**.
 
+### Fix “ERR_TOO_MANY_REDIRECTS” (apex ↔ www loop)
+
+If you see “blondhouse.nl redirected you too many times”, **Vercel is redirecting apex → www** while the app redirects www → apex. Fix it in Vercel:
+
+1. **Vercel Dashboard** → your project → **Settings** → **Domains**.
+2. You should see **blondhouse.nl** and **www.blondhouse.nl**. One of them is “Primary” or has a redirect.
+3. **Set the primary domain to `blondhouse.nl`** (apex).  
+   - If there is a **“Redirect”** or **“Edit”** next to a domain, open it.  
+   - For **www.blondhouse.nl**: choose **“Redirect to blondhouse.nl”** (or “Redirect to primary”).  
+   - For **blondhouse.nl**: it must **not** redirect anywhere; it should be the primary.  
+4. If you see **“Redirect apex (blondhouse.nl) to www”** or **“Make www the primary”**, **turn that off** or switch to “Redirect www to apex” / “blondhouse.nl is primary”.
+5. Save, wait a minute, then try https://blondhouse.nl again (ideally in an incognito window or after clearing cookies for blondhouse.nl).
+
 ### If you use another host
 
 - Point DNS for `blondhouse.nl` (and optionally `www.blondhouse.nl`) to that host.

@@ -84,6 +84,15 @@ export const services: Service[] = [
 		price: 'from €40',
 		category: 'Styling',
 	},
+	{
+		id: 'hair-extensions',
+		name: 'Hair Extensions – Micro Capsule Method',
+		description:
+			'Add length, volume, and natural movement with our micro-capsule technique. You can also purchase high-quality hair directly from our studio.',
+		duration: 120, // placeholder; actual time confirmed at consultation
+		price: 'For details and pricing, visit us for a consultation or contact us via WhatsApp.',
+		category: 'Extensions',
+	},
 ]
 
 export function getServiceById(id: string): Service | undefined {
@@ -154,6 +163,11 @@ export function getServiceColor(serviceId?: string): {
 		'beach-waves': {
 			bg: '#14b8a6', // teal-500 - Teal
 			border: '#0d9488', // teal-600
+			text: '#ffffff',
+		},
+		'hair-extensions': {
+			bg: '#a855f7', // purple-500
+			border: '#9333ea', // purple-600
 			text: '#ffffff',
 		},
 	}

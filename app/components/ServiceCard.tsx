@@ -40,7 +40,7 @@ export default function ServiceCard({
 				{/* Icon */}
 				<div className='inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-amber-100 mb-4 overflow-hidden shrink-0'>
 					<Image
-						src='/images/HairDresStuff.png'
+						src='/images/newLogo.png'
 						alt='Hair styling service'
 						width={56}
 						height={56}
