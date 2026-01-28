@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import {
-	getAppointments,
 	adminCancelBooking,
 	adminCreateBooking,
 	adminUpdateBooking,
+	getAppointments,
 } from '../../actions/appointments'
-import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import AdminCalendar from '../../components/admin/AdminCalendar'
 import AppointmentModal from '../../components/admin/AppointmentModal'
+import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import type { Appointment, BookingFormData } from '../../lib/types'
 
 export default function AdminDashboard() {
@@ -26,7 +26,7 @@ export default function AdminDashboard() {
 	const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null)
 	const [cancelConfirmLoading, setCancelConfirmLoading] = useState(false)
 	const [cancelConfirmError, setCancelConfirmError] = useState<string | null>(
-		null
+		null,
 	)
 
 	useEffect(() => {
@@ -46,8 +46,10 @@ export default function AdminDashboard() {
 			const data = await getAppointments()
 			setAppointments(
 				data.sort((a, b) =>
-					a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)
-				)
+					a.date === b.date
+						? a.time.localeCompare(b.time)
+						: a.date.localeCompare(b.date),
+				),
 			)
 			// Also tell the calendar to reload its own data so changes are visible immediately.
 			setCalendarRefreshToken(prev => prev + 1)
@@ -70,14 +72,14 @@ export default function AdminDashboard() {
 			const result = await adminCancelBooking(cancelConfirmId)
 			if (!result.success) {
 				setCancelConfirmError(
-					result.error || 'Failed to cancel appointment. Please try again.'
+					result.error || 'Failed to cancel appointment. Please try again.',
 				)
 				return
 			}
 
-				await loadAppointments()
-				setSelectedAppointment(null)
-				setIsModalOpen(false)
+			await loadAppointments()
+			setSelectedAppointment(null)
+			setIsModalOpen(false)
 			setCancelConfirmId(null)
 		} catch (error) {
 			console.error('Error cancelling appointment:', error)
@@ -95,7 +97,7 @@ export default function AdminDashboard() {
 
 	const appointmentToCancel = useMemo(
 		() => appointments.find(a => a.id === cancelConfirmId) ?? null,
-		[appointments, cancelConfirmId]
+		[appointments, cancelConfirmId],
 	)
 
 	const handleOpenEditModal = (appointment: Appointment) => {
@@ -140,7 +142,7 @@ export default function AdminDashboard() {
 	const handleCalendarAppointmentMove = async (
 		appointmentId: string,
 		newDate: string,
-		newTime: string
+		newTime: string,
 	) => {
 		try {
 			const result = await adminUpdateBooking(appointmentId, {
@@ -166,7 +168,7 @@ export default function AdminDashboard() {
 	if (status === 'loading') {
 		return (
 			<div
-				className='min-h-screen bg-gradient-to-r from-amber-50 via-white to-amber-50 flex items-center justify-center'
+				className='min-h-screen bg-linear-to-r from-amber-50 via-white to-amber-50 flex items-center justify-center'
 				role='status'
 				aria-live='polite'
 				aria-label='Loading admin dashboard'
@@ -193,7 +195,9 @@ export default function AdminDashboard() {
 							d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
 						></path>
 					</svg>
-					<p className='text-sm sm:text-base text-zinc-600 font-medium'>Loading...</p>
+					<p className='text-sm sm:text-base text-zinc-600 font-medium'>
+						Loading...
+					</p>
 				</div>
 			</div>
 		)
@@ -204,33 +208,34 @@ export default function AdminDashboard() {
 	}
 
 	return (
-		<div className='min-h-screen bg-gradient-to-r from-amber-50 via-white to-amber-50'>
+		<div className='min-h-screen bg-linear-to-r from-amber-50 via-white to-amber-50'>
 			{/* Header */}
 			<header
 				className='bg-white border-b border-zinc-200 sticky top-0 z-40 shadow-sm'
 				role='banner'
 			>
-				<div className='mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-12 py-3 sm:py-4'>
-					<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4'>
+				<div className='mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-2.5'>
+					<div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3'>
 						<div>
-							<h1 className='text-xl sm:text-2xl font-bold text-zinc-900'>
+							<h2 className='text-md sm:text-xl font-bold text-zinc-900'>
 								Admin Dashboard
-							</h1>
-							<p className='text-xs sm:text-sm text-zinc-600 mt-0.5'>
-								Logged in as <span className='font-medium'>{session?.user?.email}</span>
+							</h2>
+							<p className='text-[10px] sm:text-xs text-zinc-600 mt-0.5'>
+								Logged in as{' '}
+								<span className='font-medium'>{session?.user?.email}</span>
 							</p>
 						</div>
-						<div className='flex items-center gap-2 sm:gap-4 w-full sm:w-auto'>
+						<div className='flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto'>
 							<a
 								href='/admin/analytics'
-								className='text-xs sm:text-sm text-zinc-600 hover:text-zinc-900 font-medium transition-colors px-2 sm:px-3 py-1.5 sm:py-2 rounded-md hover:bg-zinc-100 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
+								className='text-[10px] sm:text-xs text-zinc-600 hover:text-zinc-900 font-medium transition-colors px-2 py-1 rounded-md hover:bg-zinc-100 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
 								aria-label='View analytics'
 							>
 								Analytics
 							</a>
 							<a
 								href='/book'
-								className='text-xs sm:text-sm text-zinc-600 hover:text-zinc-900 font-medium transition-colors px-2 sm:px-3 py-1.5 sm:py-2 rounded-md hover:bg-zinc-100 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
+								className='text-[10px] sm:text-xs text-zinc-600 hover:text-zinc-900 font-medium transition-colors px-2 py-1 rounded-md hover:bg-zinc-100 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2'
 								aria-label='View public booking page'
 							>
 								View Public Booking
@@ -239,11 +244,11 @@ export default function AdminDashboard() {
 								type='button'
 								onClick={() => signOut({ callbackUrl: '/admin/login' })}
 								aria-label='Sign out of admin account'
-								className='group relative overflow-hidden rounded-lg bg-gradient-to-r from-red-400 via-red-500 to-red-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white shadow-lg transition-all duration-300 hover:shadow-red-500/50 hover:scale-[1.02] active:scale-[0.98] font-medium min-h-[36px] sm:min-h-[40px] flex items-center justify-center focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
+								className='group relative overflow-hidden rounded-lg bg-linear-to-r from-red-400 via-red-500 to-red-600 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs text-white shadow-lg transition-all duration-300 hover:shadow-red-500/50 hover:scale-[1.02] active:scale-[0.98] font-medium min-h-[32px] sm:min-h-[36px] flex items-center justify-center focus:ring-2 focus:ring-red-500 focus:ring-offset-2'
 							>
 								{/* Shimmer animation overlay */}
 								<span
-									className='absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out'
+									className='absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out'
 									aria-hidden='true'
 								/>
 								{/* Glow effect */}
@@ -259,25 +264,22 @@ export default function AdminDashboard() {
 			</header>
 
 			<main
-				className='mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-12 py-6 sm:py-8'
+				className='mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5'
 				role='main'
 			>
-				<div className='space-y-6 sm:space-y-8'>
+				<div className='space-y-4 sm:space-y-5'>
 					{/* Calendar Section - Full Width */}
-					<section
-						className='w-full'
-						aria-labelledby='calendar-section-title'
-					>
-						<div className='bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6'>
-							<h2
+					<section className='w-full' aria-labelledby='calendar-section-title'>
+						<div className='bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4'>
+							<h3
 								id='calendar-section-title'
-								className='text-xl sm:text-2xl font-bold text-zinc-900 mb-3 sm:mb-4'
+								className='text-lg sm:text-xl font-bold text-zinc-900 mb-2 sm:mb-3'
 							>
 								Manage Availability
-							</h2>
-							<p className='text-xs sm:text-sm text-zinc-600 mb-4 sm:mb-6 leading-relaxed'>
-								Manage working days and hours. In time grid views: click empty slots
-								to create appointments, drag appointments to move them.
+							</h3>
+							<p className='text-[10px] sm:text-xs text-zinc-600 mb-3 sm:mb-4 leading-relaxed'>
+								Manage working days and hours. In time grid views: click empty
+								slots to create appointments, drag appointments to move them.
 							</p>
 							<AdminCalendar
 								refreshToken={calendarRefreshToken}
@@ -303,7 +305,7 @@ export default function AdminDashboard() {
 				onCancelBooking={async id => {
 					if (id) openCancelConfirm(id)
 				}}
-				onSave={async (data) => {
+				onSave={async data => {
 					const result = await handleSaveAppointment(data)
 					if (result.success) {
 						await loadAppointments()
@@ -332,4 +334,3 @@ export default function AdminDashboard() {
 		</div>
 	)
 }
-

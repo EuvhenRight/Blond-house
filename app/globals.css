@@ -1372,6 +1372,13 @@ small,
 	z-index: 10;
 }
 
+/* Laptop screens (1024px+) - bigger day number */
+@media (min-width: 1024px) {
+	.admin-day-number {
+		font-size: 1rem;
+	}
+}
+
 .admin-day-number-today {
 	width: 1.5rem;
 	height: 1.5rem;
@@ -1381,6 +1388,14 @@ small,
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+
+/* Laptop screens (1024px+) - bigger today indicator */
+@media (min-width: 1024px) {
+	.admin-day-number-today {
+		width: 1.75rem;
+		height: 1.75rem;
+	}
 }
 
 /* Day status (working hours / not available) */
@@ -1407,6 +1422,14 @@ small,
 	padding: 0;
 }
 
+/* Laptop screens (1024px+) - bigger working hours text */
+@media (min-width: 1024px) {
+	.admin-day-working-hours {
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+}
+
 .admin-day-closed {
 	font-size: 0.625rem;
 	font-weight: 500;
@@ -1418,6 +1441,14 @@ small,
 	text-align: right;
 	margin: 0;
 	padding: 0;
+}
+
+/* Laptop screens (1024px+) - bigger "Not available" text */
+@media (min-width: 1024px) {
+	.admin-day-closed {
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
 }
 
 .admin-day-past {

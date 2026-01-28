@@ -43,14 +43,14 @@ function emailLayout(content: string, title: string) {
 	<div class="wrapper">
 		<div class="card">
 			<div class="header">
-				<h1>BlondHouse</h1>
+				<h1>Hair Studio</h1>
 				<p style="margin:8px 0 0; font-size:14px; opacity:0.95;">Hair Studio Amsterdam</p>
 			</div>
 			<div class="body">
 				${content}
 			</div>
 			<div class="footer">
-				<p><strong>BlondHouse</strong> · ${STUDIO_ADDRESS}</p>
+				<p><strong>Hair Studio</strong> · ${STUDIO_ADDRESS}</p>
 				<p><a href="${STUDIO_SITE}">blondhouse.nl</a> · <a href="mailto:${FROM_EMAIL}">${FROM_EMAIL}</a></p>
 			</div>
 		</div>
@@ -86,7 +86,8 @@ export async function sendBookingConfirmationEmail(appointment: Appointment) {
 		const { data, error } = await resend.emails.send({
 			from: FROM,
 			to: appointment.customerEmail,
-			subject: 'Appointment confirmed – BlondHouse',
+			replyTo: FROM_EMAIL,
+			subject: 'Appointment confirmed – Hair Studio',
 			html: emailLayout(content, 'Appointment confirmed'),
 		})
 
@@ -131,7 +132,8 @@ export async function sendAdminNotificationEmail(appointment: Appointment) {
 		const { data, error } = await resend.emails.send({
 			from: FROM,
 			to: adminEmail,
-			subject: `New booking – ${appointment.customerName} – BlondHouse`,
+			replyTo: FROM_EMAIL,
+			subject: `New booking – ${appointment.customerName} – Hair Studio`,
 			html: emailLayout(content, 'New appointment booking'),
 		})
 
@@ -187,7 +189,8 @@ export async function sendAppointmentChangeEmail(
 		const { data, error } = await resend.emails.send({
 			from: FROM,
 			to: appointment.customerEmail,
-			subject: 'Appointment time changed – BlondHouse',
+			replyTo: FROM_EMAIL,
+			subject: 'Appointment time changed – Hair Studio',
 			html: emailLayout(content, 'Appointment time changed'),
 		})
 
@@ -216,8 +219,8 @@ export async function sendCancellationEmail(
 			? appointment.customerEmail!
 			: process.env.ADMIN_EMAIL_NOTIFICATION || 'admin@blondhouse.com'
 		const subject = isCustomer
-			? 'Appointment cancelled – BlondHouse'
-			: `Appointment cancelled – ${appointment.customerName} – BlondHouse`
+			? 'Appointment cancelled – Hair Studio'
+			: `Appointment cancelled – ${appointment.customerName} – Hair Studio`
 
 		const dateFormatted = new Date(appointment.date).toLocaleDateString(
 			'en-US',
@@ -242,6 +245,7 @@ export async function sendCancellationEmail(
 		const { data, error } = await resend.emails.send({
 			from: FROM,
 			to: recipient,
+			replyTo: FROM_EMAIL,
 			subject,
 			html: emailLayout(content, 'Appointment cancelled'),
 		})
