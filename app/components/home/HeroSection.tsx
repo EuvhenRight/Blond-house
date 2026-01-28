@@ -267,7 +267,7 @@ export default function HeroSection() {
 					href='/book'
 					aria-label='Book an appointment'
 					tabIndex={showButtons && buttonsVisible ? 0 : -1}
-					className={`group lg:hidden absolute right-16 bottom-60 z-30 flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-white/10 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(255,255,255,0.1)] transition-all duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:bg-white/15 active:scale-95 ${
+					className={`group lg:hidden absolute right-16 bottom-64 z-30 flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-white/10 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(255,255,255,0.1)] transition-all duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:bg-white/15 active:scale-95 ${
 						showButtons && buttonsVisible
 							? 'opacity-100 translate-y-0 pointer-events-auto'
 							: 'opacity-0 translate-y-full pointer-events-none'
@@ -295,7 +295,7 @@ export default function HeroSection() {
 
 				{/* Social Icons - Visible only in HeroSection, hidden when next component appears */}
 				<div
-					className={`absolute left-4 sm:left-6 md:left-8 lg:left-8 xl:left-12 bottom-44 z-20 flex flex-row items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 transition-all ease-out ${
+					className={`text-gray-700 absolute left-4 sm:left-6 md:left-8 lg:left-8 xl:left-12 bottom-48 z-20 flex flex-row items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 transition-all ease-out ${
 						showButtons && buttonsVisible
 							? 'opacity-100 translate-y-0'
 							: 'opacity-0 translate-y-full pointer-events-none'
