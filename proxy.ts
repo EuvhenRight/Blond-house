@@ -1,4 +1,3 @@
-import type { JWT } from 'next-auth/jwt'
 import { getToken } from 'next-auth/jwt'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
@@ -31,9 +30,8 @@ export async function proxy(request: NextRequest) {
 			secret: process.env.NEXTAUTH_SECRET,
 		})
 
-		// Check if user is authenticated and is the configured admin (by email)
-		const adminToken = token as (JWT & { email?: string }) | null
-		if (!adminToken || adminToken.email !== process.env.ADMIN_EMAIL) {
+		// Require an authenticated session for admin routes
+		if (!token) {
 			const loginUrl = new URL('/admin/login', request.url)
 			loginUrl.searchParams.set('callbackUrl', pathname)
 			return NextResponse.redirect(loginUrl)
