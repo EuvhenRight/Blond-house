@@ -1,4 +1,3 @@
-import { getToken } from 'next-auth/jwt'
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
@@ -16,27 +15,6 @@ export async function proxy(request: NextRequest) {
 	}
 
 	const response = NextResponse.next()
-
-	// Only protect admin routes
-	if (pathname.startsWith('/admin')) {
-		// Skip login page
-		if (pathname.startsWith('/admin/login')) {
-			return response
-		}
-
-		// Get token from request
-		const token = await getToken({
-			req: request,
-			secret: process.env.NEXTAUTH_SECRET,
-		})
-
-		// Require an authenticated session for admin routes
-		if (!token) {
-			const loginUrl = new URL('/admin/login', request.url)
-			loginUrl.searchParams.set('callbackUrl', pathname)
-			return NextResponse.redirect(loginUrl)
-		}
-	}
 
 	// Content Security Policy - allow unsafe-eval in development for Next.js HMR and webpack
 	const isDevelopment = process.env.NODE_ENV === 'development'
