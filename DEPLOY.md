@@ -15,17 +15,17 @@ Open http://localhost:3001 and test booking + admin.
 
 Use the template in **`env.example`**. Copy those keys into your host’s environment (e.g. Vercel).
 
-| Variable | Required | Notes |
-|----------|----------|--------|
-| `NEXT_PUBLIC_SITE_URL` | Yes | `https://blondhouse.nl` |
-| `NEXTAUTH_URL` | Yes | `https://blondhouse.nl` (same as site URL) |
-| `NEXTAUTH_SECRET` | Yes | e.g. `openssl rand -base64 32` |
-| `ADMIN_EMAIL` | Yes | Admin login email |
-| `ADMIN_PASSWORD` | Yes | Admin login password |
-| `NEXT_PUBLIC_FIREBASE_*` | Yes | From Firebase Console → Project settings |
-| `RESEND_API_KEY` | Yes | For booking/notification emails |
-| `RESEND_FROM_EMAIL` | Optional | Default `noreply@blondhouse.nl` – use a verified domain |
-| `ADMIN_EMAIL_NOTIFICATION` | Optional | Where to send admin notifications |
+| Variable                   | Required | Notes                                                   |
+| -------------------------- | -------- | ------------------------------------------------------- |
+| `NEXT_PUBLIC_SITE_URL`     | Yes      | `https://blondhouse.nl`                                 |
+| `NEXTAUTH_URL`             | Yes      | `https://blondhouse.nl` (same as site URL)              |
+| `NEXTAUTH_SECRET`          | Yes      | e.g. `openssl rand -base64 32`                          |
+| `ADMIN_EMAIL`              | Yes      | Admin login email                                       |
+| `ADMIN_PASSWORD`           | Yes      | Admin login password                                    |
+| `NEXT_PUBLIC_FIREBASE_*`   | Yes      | From Firebase Console → Project settings                |
+| `RESEND_API_KEY`           | Yes      | For booking/notification emails                         |
+| `RESEND_FROM_EMAIL`        | Optional | Default `noreply@blondhouse.nl` – use a verified domain |
+| `ADMIN_EMAIL_NOTIFICATION` | Optional | Where to send admin notifications                       |
 
 ## 3. Domain (blondhouse.nl)
 
@@ -45,10 +45,10 @@ If you see “blondhouse.nl redirected you too many times”, **Vercel is redire
 
 1. **Vercel Dashboard** → your project → **Settings** → **Domains**.
 2. You should see **blondhouse.nl** and **www.blondhouse.nl**. One of them is “Primary” or has a redirect.
-3. **Set the primary domain to `blondhouse.nl`** (apex).  
-   - If there is a **“Redirect”** or **“Edit”** next to a domain, open it.  
-   - For **www.blondhouse.nl**: choose **“Redirect to blondhouse.nl”** (or “Redirect to primary”).  
-   - For **blondhouse.nl**: it must **not** redirect anywhere; it should be the primary.  
+3. **Set the primary domain to `blondhouse.nl`** (apex).
+   - If there is a **“Redirect”** or **“Edit”** next to a domain, open it.
+   - For **www.blondhouse.nl**: choose **“Redirect to blondhouse.nl”** (or “Redirect to primary”).
+   - For **blondhouse.nl**: it must **not** redirect anywhere; it should be the primary.
 4. If you see **“Redirect apex (blondhouse.nl) to www”** or **“Make www the primary”**, **turn that off** or switch to “Redirect www to apex” / “blondhouse.nl is primary”.
 5. Save, wait a minute, then try https://blondhouse.nl again (ideally in an incognito window or after clearing cookies for blondhouse.nl).
 
@@ -67,6 +67,28 @@ If you see “blondhouse.nl redirected you too many times”, **Vercel is redire
 - Verify the domain **blondhouse.nl** in Resend.
 - Use a from-address on that domain (e.g. `noreply@blondhouse.nl`) for `RESEND_FROM_EMAIL`.
 
+### Avoid emails going to spam (deliverability)
+
+1. **Verify your domain in Resend**
+   - Resend Dashboard → **Domains** → Add **blondhouse.nl**.
+   - Resend will show DNS records to add (SPF, DKIM). Add them at your DNS provider (e.g. GoDaddy, Cloudflare) for **blondhouse.nl**.
+   - Wait until Resend shows the domain as **Verified**.
+
+2. **Add the DNS records Resend gives you**
+   - Typically: one **TXT** for SPF (e.g. `v=spf1 include:amazonses.com ~all`) and one or more **CNAME** for DKIM.
+   - Do **not** skip DKIM; it is the main signal that your mail is legitimate.
+
+3. **Optional: DMARC (recommended for better deliverability)**
+   - Add a TXT record at `_dmarc.blondhouse.nl`:
+   - Start with monitoring only: `v=DMARC1; p=none; rua=mailto:yuri.prodjhair@gmail.com`
+   - After a few weeks with no issues, you can move to `p=quarantine` or `p=reject`. See [Resend DMARC docs](https://resend.com/docs/dashboard/domains/dmarc).
+
+4. **Use a proper From name**
+   - The app sends as **BlondHouse Hair Studio &lt;noreply@blondhouse.nl&gt;** (no code change needed). A real business name in the From field helps inbox placement.
+
+5. **Warm up and reputation**
+   - Send a few test emails to yourself first. Avoid sending large volumes immediately; gradual volume helps build reputation.
+
 ## 6. After deploy
 
 - Open https://blondhouse.nl and test:
@@ -76,10 +98,10 @@ If you see “blondhouse.nl redirected you too many times”, **Vercel is redire
 
 ## Summary
 
-| Step | Action |
-|------|--------|
-| Env | Set all variables from `env.example` in your host (production = blondhouse.nl). |
-| Domain | Add blondhouse.nl (and www) in your host’s domain settings and DNS. |
-| Firebase | Add blondhouse.nl (and www) to Auth authorized domains. |
-| Resend | Verify blondhouse.nl and use it for `RESEND_FROM_EMAIL`. |
-| Build | `npm run build` (or use your host’s build command). |
+| Step     | Action                                                                          |
+| -------- | ------------------------------------------------------------------------------- |
+| Env      | Set all variables from `env.example` in your host (production = blondhouse.nl). |
+| Domain   | Add blondhouse.nl (and www) in your host’s domain settings and DNS.             |
+| Firebase | Add blondhouse.nl (and www) to Auth authorized domains.                         |
+| Resend   | Verify blondhouse.nl and use it for `RESEND_FROM_EMAIL`.                        |
+| Build    | `npm run build` (or use your host’s build command).                             |
