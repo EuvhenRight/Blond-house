@@ -262,33 +262,29 @@ export default function HeroSection() {
 					</div>
 				</div>
 
-				{/* Book button - realistic glass effect, bottom-right, mobile/tablet only; focusable */}
+				{/* Book button - orange gradient, touch-friendly, mobile/tablet only */}
 				<Link
 					href='/book'
 					aria-label='Book an appointment'
 					tabIndex={showButtons && buttonsVisible ? 0 : -1}
-					className={`group lg:hidden absolute right-16 bottom-64 z-30 flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-white/10 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(255,255,255,0.1)] transition-all duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:bg-white/15 active:scale-95 ${
+					className={`group book-btn-touch lg:hidden absolute right-8 bottom-52 z-30 flex items-center justify-center min-w-[56px] min-h-[56px] w-24 h-24 rounded-2xl overflow-hidden bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 border border-amber-600/40 shadow-[0_8px_24px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:shadow-[0_12px_32px_rgba(245,158,11,0.5)] active:scale-95 active:shadow-[0_4px_16px_rgba(245,158,11,0.35)] touch-manipulation select-none [-webkit-tap-highlight-color:transparent] ${
 						showButtons && buttonsVisible
-							? 'opacity-100 translate-y-0 pointer-events-auto'
+							? 'opacity-100 translate-y-0 pointer-events-auto animate-[pulse-scale_2s_ease-in-out_infinite] [-webkit-animation:pulse-scale_2s_ease-in-out_infinite]'
 							: 'opacity-0 translate-y-full pointer-events-none'
 					}`}
-					style={{
-						backdropFilter: 'blur(20px) saturate(180%)',
-						WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-					}}
 				>
-					{/* Inner highlight for depth */}
+					{/* Inner highlight */}
 					<span
-						className='absolute inset-0 rounded-full bg-linear-to-b from-white/20 via-transparent to-transparent pointer-events-none'
+						className='absolute inset-0 rounded-full bg-linear-to-b from-white/25 via-transparent to-transparent pointer-events-none'
 						aria-hidden='true'
 					/>
-					{/* Shimmer overlay - continuous animation on mobile/tablet (iOS-friendly class) */}
+					{/* Shimmer – Tailwind animate */}
 					<span
-						className='hero-book-button-shimmer absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent'
+						className='book-btn-shimmer absolute inset-0 bg-linear-to-r from-transparent via-white/35 to-transparent animate-[shimmer-sweep_3s_ease-in-out_infinite] [-webkit-animation:shimmer-sweep_3s_ease-in-out_infinite] will-change-transform'
 						aria-hidden='true'
 					/>
 					{/* Book text */}
-					<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] relative z-10 font-semibold text-md'>
+					<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] relative z-10 font-semibold text-md'>
 						BOOK NOW
 					</span>
 				</Link>

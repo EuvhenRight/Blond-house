@@ -896,6 +896,29 @@ small,
 	}
 }
 
+/* Scale pulse: bigger → smaller → bigger (for Book button) */
+@keyframes pulse-scale {
+	0%,
+	100% {
+		transform: scale(1);
+	}
+	50% {
+		transform: scale(1.08);
+	}
+}
+
+@-webkit-keyframes pulse-scale {
+	0%,
+	100% {
+		-webkit-transform: scale(1);
+		transform: scale(1);
+	}
+	50% {
+		-webkit-transform: scale(1.08);
+		transform: scale(1.08);
+	}
+}
+
 /* Hero Book button - glass effect with amber gradient */
 .hero-book-button {
 	background: linear-gradient(
@@ -931,10 +954,15 @@ small,
 	}
 	/* Disable shimmer animation for reduced motion */
 	[style*='shimmer-sweep'],
-	.hero-book-button-shimmer {
+	.hero-book-button-shimmer,
+	.book-btn-shimmer {
 		-webkit-animation: none !important;
 		animation: none !important;
 		will-change: auto !important;
+	}
+	/* Disable pulse on Book button */
+	.book-btn-touch {
+		animation: none !important;
 	}
 }
 
