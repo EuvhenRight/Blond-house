@@ -93,9 +93,11 @@ export default function HeroSection() {
 		// Last text appears at: textStart + (textLines.length - 1) * textStep
 		// Then add additional delay for buttons
 		const textLinesCount = 3 // tagline, description, description_2
-		const lastTextDelay = ANIMATION_DELAY.textStart + (textLinesCount - 1) * ANIMATION_DELAY.textStep
+		const lastTextDelay =
+			ANIMATION_DELAY.textStart +
+			(textLinesCount - 1) * ANIMATION_DELAY.textStep
 		const buttonsDelay = lastTextDelay + ANIMATION_DURATION.text + 200 // After text animation + extra delay
-		
+
 		const buttonsTimeout = setTimeout(() => {
 			setButtonsVisible(true)
 		}, buttonsDelay)
@@ -172,7 +174,9 @@ export default function HeroSection() {
 			onMouseLeave={handleMouseLeave}
 		>
 			{/* Background Image */}
-			<div className={`absolute inset-0 z-0 w-full ${isMobile ? 'h-full' : 'h-full'} mask-b-from-95% overflow-hidden`}>
+			<div
+				className={`absolute inset-0 z-0 w-full ${isMobile ? 'h-full' : 'h-full'} mask-b-from-95% overflow-hidden`}
+			>
 				<div
 					className={`absolute inset-0 transition-all ease-out ${
 						isVisible
@@ -245,8 +249,8 @@ export default function HeroSection() {
 												index === 0
 													? 'text-[52px] md:text-[52px] lg:text-[72px] xl:text-[90px] font-light text-transparent bg-clip-text bg-linear-to-r from-amber-900 via-amber-800 to-amber-700 drop-shadow-[0_4px_12px_rgba(0,0,0,0.3)] [text-shadow:0_2px_8px_rgba(0,0,0,0.2)] tracking-tight'
 													: index === 1
-													? 'text-[36px] sm:text-[42px] md:text-[42px] lg:text-[64px] xl:text-[72px] font-light text-black drop-shadow-[0_3px_10px_rgba(0,0,0,0.25)] [text-shadow:0_2px_6px_rgba(0,0,0,0.15)] tracking-wide'
-													: 'text-[36px] sm:text-[42px] md:text-[42px] lg:text-[64px] xl:text-[72px] font-light text-black drop-shadow-[0_3px_10px_rgba(0,0,0,0.25)] [text-shadow:0_2px_6px_rgba(0,0,0,0.15)] tracking-wide'
+														? 'text-[36px] sm:text-[42px] md:text-[42px] lg:text-[64px] xl:text-[72px] font-light text-black drop-shadow-[0_3px_10px_rgba(0,0,0,0.25)] [text-shadow:0_2px_6px_rgba(0,0,0,0.15)] tracking-wide'
+														: 'text-[36px] sm:text-[42px] md:text-[42px] lg:text-[64px] xl:text-[72px] font-light text-black drop-shadow-[0_3px_10px_rgba(0,0,0,0.25)] [text-shadow:0_2px_6px_rgba(0,0,0,0.15)] tracking-wide'
 											}`}
 										>
 											{line}
@@ -258,11 +262,46 @@ export default function HeroSection() {
 					</div>
 				</div>
 
+				{/* Book button - realistic glass effect, bottom-right, mobile/tablet only; focusable */}
+				<Link
+					href='/book'
+					aria-label='Book an appointment'
+					tabIndex={showButtons && buttonsVisible ? 0 : -1}
+					className={`group lg:hidden absolute right-16 bottom-48 z-30 flex items-center justify-center w-24 h-24 rounded-full overflow-hidden bg-white/10 backdrop-blur-xl border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(255,255,255,0.1)] transition-all duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:bg-white/15 active:scale-95 ${
+						showButtons && buttonsVisible
+							? 'opacity-100 translate-y-0 pointer-events-auto'
+							: 'opacity-0 translate-y-full pointer-events-none'
+					}`}
+					style={{
+						backdropFilter: 'blur(20px) saturate(180%)',
+						WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+					}}
+				>
+					{/* Inner highlight for depth */}
+					<span
+						className='absolute inset-0 rounded-full bg-linear-to-b from-white/20 via-transparent to-transparent pointer-events-none'
+						aria-hidden='true'
+					/>
+					{/* Shimmer overlay - continuous animation on mobile/tablet */}
+					<span
+						className='absolute inset-0 bg-linear-to-r from-transparent via-white/30 to-transparent'
+						style={{
+							animation: 'shimmer-sweep 3s ease-in-out infinite',
+							transform: 'translateX(-100%)',
+						}}
+						aria-hidden='true'
+					/>
+					{/* Book text */}
+					<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] relative z-10 font-semibold text-md'>
+						BOOK NOW
+					</span>
+				</Link>
+
 				{/* Social Icons - Visible only in HeroSection, hidden when next component appears */}
 				<div
-					className={`absolute left-4 sm:left-6 md:left-8 lg:left-8 xl:left-8 top-[calc(25%+30px)] sm:top-[25%] md:top-auto md:bottom-8 lg:bottom-8 lg:top-auto z-20 flex flex-row items-center gap-2 sm:gap-3 md:gap-4 sm:mb-12 mb:mb-12 lg:gap-6 lg:mb-12 transition-all ease-out ${
+					className={`absolute left-4 sm:left-6 md:left-8 lg:left-8 xl:left-12 bottom-32 z-20 flex flex-row items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 transition-all ease-out ${
 						showButtons && buttonsVisible
-							? 'opacity-100 translate-y-0 md:translate-y-[-50%]'
+							? 'opacity-100 translate-y-0'
 							: 'opacity-0 translate-y-full pointer-events-none'
 					}`}
 					style={{

@@ -1,4 +1,7 @@
+import type { Session, User } from 'next-auth'
+import type { JWT } from 'next-auth/jwt'
 import CredentialsProvider from 'next-auth/providers/credentials'
+// cspell:ignore Firestore
 
 export const authOptions = {
 	providers: [
@@ -41,16 +44,18 @@ export const authOptions = {
 		strategy: 'jwt' as const,
 	},
 	callbacks: {
-		async jwt({ token, user }: any) {
+		async jwt({ token, user }: { token: JWT; user?: User | null }) {
 			if (user) {
-				token.role = (user as any).role
+				token.role = (user as User).role
 			}
 			return token
 		},
-		async session({ session, token }: any) {
+		async session({ session, token }: { session: Session; token: JWT }) {
 			if (session.user) {
 				session.user.id = token.sub
-				;(session.user as any).role = token.role
+				;(session.user as User & { role?: string }).role = token.role as
+					| string
+					| undefined
 			}
 			return session
 		},

@@ -51,10 +51,10 @@ export default function PublicCalendar({
 }: PublicCalendarProps) {
 	const [workingDays, setWorkingDays] = useState<Set<string>>(new Set())
 	const [datesWithNoSlots, setDatesWithNoSlots] = useState<Set<string>>(
-		new Set()
+		new Set(),
 	)
 	const [localSelectedDate, setLocalSelectedDate] = useState<string | null>(
-		null
+		null,
 	)
 	const [calendarVersion, setCalendarVersion] = useState(0)
 	const [, setIsLoading] = useState(false)
@@ -69,7 +69,7 @@ export default function PublicCalendar({
 		() => ({
 			start: new Date().toISOString().split('T')[0],
 		}),
-		[]
+		[],
 	)
 
 	// Track loaded date ranges to prevent duplicate requests
@@ -152,7 +152,7 @@ export default function PublicCalendar({
 					const bookedAppointments = appointments
 						.filter(
 							apt =>
-								apt.status === 'confirmed' && apt.date.split('T')[0] === date
+								apt.status === 'confirmed' && apt.date.split('T')[0] === date,
 						)
 						.map(apt => ({
 							time: apt.time,
@@ -179,7 +179,7 @@ export default function PublicCalendar({
 							timeSlots.push(
 								`${hour.toString().padStart(2, '0')}:${minute
 									.toString()
-									.padStart(2, '0')}`
+									.padStart(2, '0')}`,
 							)
 							currentMinutes += 30
 						}
@@ -241,7 +241,7 @@ export default function PublicCalendar({
 				setIsLoading(false)
 			}
 		},
-		[serviceDurationMinutes] // Include serviceDurationMinutes so counts update when service changes
+		[serviceDurationMinutes], // Include serviceDurationMinutes so counts update when service changes
 	)
 
 	// Initial load - only once on mount
@@ -317,7 +317,7 @@ export default function PublicCalendar({
 				void loadAvailability(bufferStart, bufferEnd)
 			}, 300) // 300ms debounce
 		},
-		[loadAvailability]
+		[loadAvailability],
 	)
 
 	// Formatting helpers for header display
@@ -363,8 +363,8 @@ export default function PublicCalendar({
 			Date.UTC(
 				visibleRange.start.getFullYear(),
 				visibleRange.start.getMonth(),
-				visibleRange.start.getDate()
-			)
+				visibleRange.start.getDate(),
+			),
 		)
 		const dayNum = d.getUTCDay() || 7
 		d.setUTCDate(d.getUTCDate() + 4 - dayNum)
@@ -418,6 +418,11 @@ export default function PublicCalendar({
 				return // Don't allow clicking on unavailable days
 			}
 
+			// Disable fully booked dates - do not allow selection
+			if (datesWithNoSlots.has(normalizedDate)) {
+				return
+			}
+
 			// Set selected date for styling (use the normalized date from clickedDate)
 			const dateToSelect = normalizedDate
 
@@ -443,7 +448,7 @@ export default function PublicCalendar({
 				// Error handled silently
 			}
 		},
-		[workingDays, onDateSelect]
+		[workingDays, datesWithNoSlots, onDateSelect],
 	)
 
 	const isPastDate = useCallback((dateStr: string) => {
@@ -465,7 +470,7 @@ export default function PublicCalendar({
 			const normalizedDate = dateStr.split('T')[0]
 			return workingDays.has(normalizedDate)
 		},
-		[workingDays]
+		[workingDays],
 	)
 
 	const getDayStatus = useCallback(
@@ -485,7 +490,7 @@ export default function PublicCalendar({
 
 			return { status, normalizedDate }
 		},
-		[datesWithNoSlots, isPastDate, isWorkingDay]
+		[datesWithNoSlots, isPastDate, isWorkingDay],
 	)
 
 	const dayCellClassNames = useCallback(
@@ -505,14 +510,14 @@ export default function PublicCalendar({
 			if (status === 'available') {
 				classes.push('fc-day-available', 'cursor-pointer')
 			} else if (status === 'fully-booked') {
-				classes.push('fc-day-fully-booked', 'cursor-pointer')
+				classes.push('fc-day-fully-booked', 'cursor-not-allowed')
 			} else if (status === 'unavailable') {
 				classes.push('fc-day-unavailable', 'cursor-not-allowed')
 			}
 
 			return classes
 		},
-		[getDayStatus, effectiveSelectedDate]
+		[getDayStatus, effectiveSelectedDate],
 	)
 
 	// Helper function to format date as YYYY-MM-DD in local timezone (not UTC)
@@ -544,7 +549,7 @@ export default function PublicCalendar({
 				</div>
 			)
 		},
-		[getDayStatus]
+		[getDayStatus],
 	)
 
 	const dayCellDidMount = useCallback(
@@ -561,7 +566,7 @@ export default function PublicCalendar({
 				if (dateMonth !== visibleMonth || dateYear !== visibleYear) {
 					// Still apply basic styling but not availability status
 					const frame = arg.el.querySelector<HTMLElement>(
-						'.fc-daygrid-day-frame'
+						'.fc-daygrid-day-frame',
 					)
 					if (frame) {
 						frame.style.backgroundColor = '#ffffff'
@@ -583,7 +588,7 @@ export default function PublicCalendar({
 			frame.dataset.status = status
 
 			const numberEl = frame.querySelector<HTMLElement>(
-				'.fc-daygrid-day-number'
+				'.fc-daygrid-day-number',
 			)
 			const statusEl = frame.querySelector<HTMLElement>('span:nth-child(2)')
 
@@ -653,7 +658,7 @@ export default function PublicCalendar({
 				frame.style.boxShadow = 'none'
 			}
 		},
-		[getDayStatus, effectiveSelectedDate, visibleRange]
+		[getDayStatus, effectiveSelectedDate, visibleRange],
 	)
 
 	// Calendar ref to access API
@@ -689,14 +694,14 @@ export default function PublicCalendar({
 				bg: string,
 				border: string,
 				color: string,
-				shadow: string
+				shadow: string,
 			) => {
 				const cell = calendarEl.querySelector(`[data-date="${dateStr}"]`)
 				if (!cell) return
 				const frame = cell.querySelector('.fc-daygrid-day-frame') as HTMLElement
 				if (!frame) return
 				const numberEl = frame.querySelector(
-					'.fc-daygrid-day-number'
+					'.fc-daygrid-day-number',
 				) as HTMLElement
 				const statusEl = frame.querySelector('span:nth-child(2)') as HTMLElement
 
@@ -727,7 +732,7 @@ export default function PublicCalendar({
 							'#fffbeb',
 							'#f59e0b',
 							'#b45309',
-							'0 4px 12px rgba(245,158,11,0.2)'
+							'0 4px 12px rgba(245,158,11,0.2)',
 						)
 					} else if (status === 'fully-booked') {
 						applyStyles(
@@ -735,7 +740,7 @@ export default function PublicCalendar({
 							'#fee2e2',
 							'#f59e0b',
 							'#991b1b',
-							'0 4px 12px rgba(239,68,68,0.2)'
+							'0 4px 12px rgba(239,68,68,0.2)',
 						)
 					} else if (status === 'unavailable') {
 						applyStyles(prevDate, '#fef3c7', '#f59e0b', '#92400e', 'none')
@@ -748,7 +753,7 @@ export default function PublicCalendar({
 							'#ecfdf3',
 							'#a7f3d0',
 							'#047857',
-							'0 4px 12px rgba(16,185,129,0.15)'
+							'0 4px 12px rgba(16,185,129,0.15)',
 						)
 					} else if (status === 'fully-booked') {
 						applyStyles(
@@ -756,7 +761,7 @@ export default function PublicCalendar({
 							'#fee2e2',
 							'#ef4444',
 							'#991b1b',
-							'0 4px 12px rgba(239,68,68,0.15)'
+							'0 4px 12px rgba(239,68,68,0.15)',
 						)
 					}
 				}
@@ -769,7 +774,7 @@ export default function PublicCalendar({
 					'#ecfdf3',
 					'#10b981',
 					'#065f46',
-					'0 0 0 3px rgba(16, 185, 129, 0.25)'
+					'0 0 0 3px rgba(16, 185, 129, 0.25)',
 				)
 				previousSelectedRef.current = effectiveSelectedDate
 			}

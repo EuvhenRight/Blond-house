@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import type { JWT } from 'next-auth/jwt'
 import { getToken } from 'next-auth/jwt'
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 
 const APEX_HOST = 'blondhouse.nl'
 const WWW_HOST = 'www.blondhouse.nl'
@@ -30,8 +31,9 @@ export async function middleware(request: NextRequest) {
 			secret: process.env.NEXTAUTH_SECRET,
 		})
 
-		// Check if user is authenticated and is admin
-		if (!token || (token as any).role !== 'admin') {
+		// Check if user is authenticated and is the configured admin (by email)
+		const adminToken = token as (JWT & { email?: string }) | null
+		if (!adminToken || adminToken.email !== process.env.ADMIN_EMAIL) {
 			const loginUrl = new URL('/admin/login', request.url)
 			loginUrl.searchParams.set('callbackUrl', pathname)
 			return NextResponse.redirect(loginUrl)
@@ -40,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
 	// Content Security Policy - allow unsafe-eval in development for Next.js HMR and webpack
 	const isDevelopment = process.env.NODE_ENV === 'development'
-	
+
 	if (isDevelopment) {
 		// Development: More permissive CSP for Next.js HMR, webpack, and dev tools
 		const cspHeader = [
@@ -53,7 +55,7 @@ export async function middleware(request: NextRequest) {
 			"frame-src 'self'",
 			"frame-ancestors 'none'",
 		].join('; ')
-		
+
 		response.headers.set('Content-Security-Policy', cspHeader)
 	} else {
 		// Production: Stricter CSP without unsafe-eval
@@ -66,7 +68,7 @@ export async function middleware(request: NextRequest) {
 			"connect-src 'self' https:",
 			"frame-ancestors 'none'",
 		].join('; ')
-		
+
 		response.headers.set('Content-Security-Policy', cspHeader)
 	}
 

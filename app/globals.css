@@ -37,7 +37,7 @@ body {
 
 /* Explicit support for sticky positioning */
 .sticky,
-[class*="sticky"] {
+[class*='sticky'] {
 	position: -webkit-sticky !important;
 	position: sticky !important;
 }
@@ -196,7 +196,9 @@ h6 {
 
 /* All other text elements - title, serif with lighter weight */
 p,
-span:not(h1 span):not(h2 span):not(h3 span):not(h4 span):not(h5 span):not(h6 span),
+span:not(h1 span):not(h2 span):not(h3 span):not(h4 span):not(h5 span):not(
+		h6 span
+	),
 a,
 button,
 input,
@@ -216,7 +218,9 @@ th {
 /* Desktop (1440-1920px) */
 @media (min-width: 1440px) {
 	p,
-	span:not(h1 span):not(h2 span):not(h3 span):not(h4 span):not(h5 span):not(h6 span),
+	span:not(h1 span):not(h2 span):not(h3 span):not(h4 span):not(h5 span):not(
+			h6 span
+		),
 	a,
 	button,
 	input,
@@ -433,7 +437,9 @@ small,
 	min-height: 3.5rem;
 	max-height: 3.5rem;
 	overflow: hidden;
-	border-radius: var(--pc-day-radius); /* Match frame border-radius for proper clipping */
+	border-radius: var(
+		--pc-day-radius
+	); /* Match frame border-radius for proper clipping */
 }
 
 @media (min-width: 375px) {
@@ -487,7 +493,9 @@ small,
 .public-calendar .fc-daygrid-day {
 	background-color: transparent;
 	overflow: hidden; /* Clip background to rounded corners */
-	border-radius: var(--pc-day-radius); /* Match frame border-radius for proper clipping */
+	border-radius: var(
+		--pc-day-radius
+	); /* Match frame border-radius for proper clipping */
 	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 	backface-visibility: hidden;
 	-webkit-font-smoothing: antialiased;
@@ -672,7 +680,8 @@ small,
 	.fc-daygrid-day-frame:hover {
 	background-color: #fecaca;
 	transform: scale(1.05) translateY(-2px);
-	box-shadow: 0 4px 12px 0 rgba(239, 68, 68, 0.25),
+	box-shadow:
+		0 4px 12px 0 rgba(239, 68, 68, 0.25),
 		0 2px 4px 0 rgba(239, 68, 68, 0.1);
 	border-color: #ef4444;
 	z-index: 10;
@@ -866,6 +875,39 @@ small,
 	}
 }
 
+/* Shimmer animation for Book button - continuous sweep */
+@keyframes shimmer-sweep {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+/* Hero Book button - glass effect with amber gradient */
+.hero-book-button {
+	background: linear-gradient(
+		135deg,
+		rgba(251, 191, 36, 0.9) 0%,
+		rgba(245, 158, 11, 0.95) 50%,
+		rgba(217, 119, 6, 0.9) 100%
+	);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	box-shadow:
+		0 8px 32px rgba(245, 158, 11, 0.35),
+		inset 0 1px 0 rgba(255, 255, 255, 0.3);
+	border: 5px solid rgba(255, 255, 255, 0.5);
+	transition-duration: 400ms;
+}
+
+/* Shimmer overlay animation */
+.hero-book-button-shimmer {
+	animation: shimmer-sweep 3s ease-in-out infinite;
+	transform: translateX(-100%);
+}
+
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
 	.public-calendar .fc-daygrid-day-frame,
@@ -874,6 +916,10 @@ small,
 		transition: none !important;
 		animation: none !important;
 		transform: none !important;
+	}
+	/* Disable shimmer animation for reduced motion */
+	[style*='shimmer-sweep'] {
+		animation: none !important;
 	}
 }
 
