@@ -919,6 +919,15 @@ small,
 	}
 }
 
+/* Book button pulse – separate layer, GPU hints for iOS Safari/Chrome */
+.book-btn-pulse {
+	-webkit-animation: pulse-scale 2s ease-in-out infinite;
+	animation: pulse-scale 2s ease-in-out infinite;
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+	will-change: transform;
+}
+
 /* Hero Book button - glass effect with amber gradient */
 .hero-book-button {
 	background: linear-gradient(
@@ -943,6 +952,12 @@ small,
 	will-change: transform;
 }
 
+/* Shimmer GPU layer for iOS Safari/Chrome */
+.book-btn-shimmer {
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
 	.public-calendar .fc-daygrid-day-frame,
@@ -961,8 +976,11 @@ small,
 		will-change: auto !important;
 	}
 	/* Disable pulse on Book button */
-	.book-btn-touch {
+	.book-btn-touch,
+	.book-btn-pulse {
+		-webkit-animation: none !important;
 		animation: none !important;
+		will-change: auto !important;
 	}
 }
 

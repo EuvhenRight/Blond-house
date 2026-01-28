@@ -232,7 +232,7 @@ export default function HeroSection() {
 			<div className='relative z-10 h-full flex flex-col p-4 sm:p-6 md:p-8 lg:p-12'>
 				<div className='flex flex-col justify-between max-w-full sm:max-w-xl md:max-w-2xl mt-4 mb-4 sm:mt-8 md:mt-20'>
 					{/* Main Title - Customize with Tailwind classes below */}
-					<div className='mb-auto mt-[30px] sm:mt-0'>
+					<div className='mb-auto sm:mt-0'>
 						<h1 className='font-[title]! font-light! leading-[140%]! mb-4 sm:mb-6'>
 							{textLines.map((line, index) => (
 								<React.Fragment key={index}>
@@ -267,31 +267,36 @@ export default function HeroSection() {
 					href='/book'
 					aria-label='Book an appointment'
 					tabIndex={showButtons && buttonsVisible ? 0 : -1}
-					className={`group book-btn-touch lg:hidden absolute right-8 bottom-52 z-30 flex items-center justify-center min-w-[56px] min-h-[56px] w-24 h-24 rounded-2xl overflow-hidden bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 border border-amber-600/40 shadow-[0_8px_24px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:shadow-[0_12px_32px_rgba(245,158,11,0.5)] active:scale-95 active:shadow-[0_4px_16px_rgba(245,158,11,0.35)] touch-manipulation select-none [-webkit-tap-highlight-color:transparent] ${
+					className={`group book-btn-touch lg:hidden absolute right-8 bottom-60 z-30 flex items-center justify-center min-w-[56px] min-h-[56px] w-24 h-24 rounded-2xl overflow-hidden bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 border border-amber-600/40 shadow-[0_8px_24px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.35)] transition-[opacity,transform,box-shadow] duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:shadow-[0_12px_32px_rgba(245,158,11,0.5)] active:scale-95 active:shadow-[0_4px_16px_rgba(245,158,11,0.35)] touch-manipulation select-none [-webkit-tap-highlight-color:transparent] ${
 						showButtons && buttonsVisible
-							? 'opacity-100 translate-y-0 pointer-events-auto animate-[pulse-scale_2s_ease-in-out_infinite] [-webkit-animation:pulse-scale_2s_ease-in-out_infinite]'
+							? 'opacity-100 translate-y-0 pointer-events-auto'
 							: 'opacity-0 translate-y-full pointer-events-none'
 					}`}
 				>
-					{/* Inner highlight */}
+					{/* Inner wrapper: pulse animation on own layer (avoids transition conflict on iOS) */}
 					<span
-						className='absolute inset-0 rounded-full bg-linear-to-b from-white/25 via-transparent to-transparent pointer-events-none'
-						aria-hidden='true'
-					/>
-					{/* Shimmer – Tailwind animate */}
-					<span
-						className='book-btn-shimmer absolute inset-0 bg-linear-to-r from-transparent via-white/35 to-transparent animate-[shimmer-sweep_3s_ease-in-out_infinite] [-webkit-animation:shimmer-sweep_3s_ease-in-out_infinite] will-change-transform'
-						aria-hidden='true'
-					/>
-					{/* Book text */}
-					<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] relative z-10 font-semibold text-md'>
-						BOOK NOW
+						className={`absolute inset-0 flex items-center justify-center rounded-2xl ${showButtons && buttonsVisible ? 'book-btn-pulse' : ''}`}
+					>
+						{/* Inner highlight */}
+						<span
+							className='absolute inset-0 rounded-2xl bg-linear-to-b from-white/25 via-transparent to-transparent pointer-events-none'
+							aria-hidden='true'
+						/>
+						{/* Shimmer – CSS class for reliable iOS (hero-book-button-shimmer has -webkit-animation) */}
+						<span
+							className='book-btn-shimmer hero-book-button-shimmer absolute inset-0 rounded-2xl bg-linear-to-r from-transparent via-white/35 to-transparent'
+							aria-hidden='true'
+						/>
+						{/* Book text */}
+						<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] relative z-10 font-semibold text-md'>
+							BOOK NOW
+						</span>
 					</span>
 				</Link>
 
 				{/* Social Icons - Visible only in HeroSection, hidden when next component appears */}
 				<div
-					className={`text-gray-700 absolute left-4 sm:left-6 md:left-8 lg:left-8 xl:left-12 bottom-48 z-20 flex flex-row items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 transition-all ease-out ${
+					className={`text-gray-700 absolute left-4 sm:left-6 md:left-8 lg:left-8 xl:left-12 bottom-56 z-20 flex flex-row items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 transition-all ease-out ${
 						showButtons && buttonsVisible
 							? 'opacity-100 translate-y-0'
 							: 'opacity-0 translate-y-full pointer-events-none'
