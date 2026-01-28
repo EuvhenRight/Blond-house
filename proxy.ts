@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
 const APEX_HOST = 'blondhouse.nl'
 const WWW_HOST = 'www.blondhouse.nl'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const { pathname, search } = request.nextUrl
 	const host = request.headers.get('host') ?? request.nextUrl.hostname
 
