@@ -44,10 +44,10 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
 
 	return (
 		<>
-			{/* Backdrop blur overlay when menu is open */}
+			{/* Backdrop overlay when menu is open */}
 			<div
 				onClick={onClose}
-				className={`lg:hidden fixed inset-0 transition-all duration-300 ease-in-out z-10 ${
+				className={`lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm transition-all duration-300 ease-in-out z-10 ${
 					isOpen
 						? 'opacity-100 pointer-events-auto'
 						: 'opacity-0 pointer-events-none'
@@ -55,10 +55,12 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
 				aria-hidden='true'
 			/>
 
-			{/* Mobile/Tablet Menu - side panel, right side, 1/4 width, 1/4 screen height, white background */}
+			{/* Mobile/Tablet Menu – from center: width expands to full with px-2 */}
 			<div
-				className={`lg:hidden fixed top-20 w-auto h-auto bg-white border border-zinc-200/80 backdrop-blur-md z-20 right-2 overflow-y-auto transition-all duration-300 rounded-lg ease-in-out ${
-					isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+				className={`lg:hidden fixed top-20 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] max-w-[calc(100vw-1rem)] bg-white border border-zinc-200/80 shadow-lg z-20 overflow-hidden overflow-y-auto rounded-xl origin-center transition-[transform,opacity] duration-300 ease-out ${
+					isOpen
+						? 'scale-x-100 opacity-100 pointer-events-auto'
+						: 'scale-x-0 opacity-0 pointer-events-none'
 				}`}
 			>
 				<nav className='px-2 py-4 flex flex-col gap-6'>

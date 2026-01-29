@@ -229,7 +229,7 @@ export default function HeroSection() {
 
 			{/* Content Container */}
 			<div className='relative z-10 h-full flex flex-col p-4 sm:p-6 md:p-8 lg:p-12'>
-				<div className='flex flex-col justify-between max-w-full sm:max-w-xl md:max-w-2xl mt-4 mb-4 sm:mt-8 md:mt-20'>
+				<div className='flex flex-col justify-between max-w-full sm:max-w-xl md:max-w-2xl mt-10 mb-4 sm:mt-16 md:mt-20'>
 					{/* Main Title - Customize with Tailwind classes below */}
 					<div className='mb-auto sm:mt-0'>
 						<h1 className='font-[title]! font-light! leading-[140%]! mb-4 sm:mb-6'>
@@ -258,71 +258,45 @@ export default function HeroSection() {
 								</React.Fragment>
 							))}
 						</h1>
+						{/* Social Icons – under main title */}
+						<div
+							className={`text-gray-700 flex flex-row items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 transition-all ease-out mt-10 sm:mt-12 ${
+								showButtons && buttonsVisible
+									? 'opacity-100 translate-y-0'
+									: 'opacity-0 translate-y-full pointer-events-none'
+							}`}
+							style={{
+								transitionDuration: '400ms',
+							}}
+						>
+							<SocialIcon
+								href={siteConfig.googleMaps}
+								ariaLabel={`View location in ${siteConfig.location} on Google Maps`}
+								icon={
+									<FiMapPin
+										className='w-full h-full'
+										style={{
+											filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
+										}}
+										aria-hidden='true'
+									/>
+								}
+							/>
+							<SocialIcon
+								href={siteConfig.whatsapp}
+								ariaLabel='Contact via WhatsApp'
+								icon={
+									<ImWhatsapp
+										className='w-full h-full'
+										style={{
+											filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
+										}}
+										aria-hidden='true'
+									/>
+								}
+							/>
+						</div>
 					</div>
-				</div>
-
-				{/* Book button - orange gradient, mobile/tablet only */}
-				<Link
-					href='/book'
-					aria-label='Book an appointment'
-					tabIndex={showButtons && buttonsVisible ? 0 : -1}
-					className={`group lg:hidden absolute right-8 bottom-60 z-30 flex items-center justify-center min-w-[56px] min-h-[48px] px-5 py-3 rounded-xl overflow-hidden bg-white/15 backdrop-blur-[20px] backdrop-saturate-180 border border-white/30 shadow-[0_8px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.25)] transition-[opacity,transform,box-shadow] duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:bg-white/25 hover:shadow-[0_12px_32px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.3)] active:scale-95 touch-manipulation select-none [-webkit-tap-highlight-color:transparent] ${
-						showButtons && buttonsVisible
-							? 'opacity-100 translate-y-0 pointer-events-auto'
-							: 'opacity-0 translate-y-full pointer-events-none'
-					}`}
-					style={{
-						WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-					}}
-				>
-					{/* Inner highlight (static) */}
-					<span
-						className='absolute inset-0 rounded-xl bg-linear-to-b from-white/25 via-transparent to-transparent pointer-events-none'
-						aria-hidden='true'
-					/>
-					{/* Book text */}
-					<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] relative z-10 font-semibold text-md'>
-						BOOK NOW
-					</span>
-				</Link>
-
-				{/* Social Icons - Visible only in HeroSection, hidden when next component appears */}
-				<div
-					className={`text-gray-700 absolute left-4 sm:left-6 md:left-8 lg:left-8 xl:left-12 bottom-56 z-20 flex flex-row items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 transition-all ease-out ${
-						showButtons && buttonsVisible
-							? 'opacity-100 translate-y-0'
-							: 'opacity-0 translate-y-full pointer-events-none'
-					}`}
-					style={{
-						transitionDuration: '400ms',
-					}}
-				>
-					<SocialIcon
-						href={siteConfig.googleMaps}
-						ariaLabel={`View location in ${siteConfig.location} on Google Maps`}
-						icon={
-							<FiMapPin
-								className='w-full h-full'
-								style={{
-									filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
-								}}
-								aria-hidden='true'
-							/>
-						}
-					/>
-					<SocialIcon
-						href={siteConfig.whatsapp}
-						ariaLabel='Contact via WhatsApp'
-						icon={
-							<ImWhatsapp
-								className='w-full h-full'
-								style={{
-									filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))',
-								}}
-								aria-hidden='true'
-							/>
-						}
-					/>
 				</div>
 			</div>
 		</section>
