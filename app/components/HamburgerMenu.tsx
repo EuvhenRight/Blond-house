@@ -57,7 +57,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
 
 			{/* Mobile/Tablet Menu - side panel, right side, 1/4 width, 1/4 screen height, white background */}
 			<div
-				className={`lg:hidden fixed top-20 w-1/4 h-[20vh] bg-white border border-zinc-200/80 backdrop-blur-md z-20 right-2 overflow-y-auto transition-all duration-300 rounded-lg ease-in-out ${
+				className={`lg:hidden fixed top-20 w-auto h-auto bg-white border border-zinc-200/80 backdrop-blur-md z-20 right-2 overflow-y-auto transition-all duration-300 rounded-lg ease-in-out ${
 					isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
 				}`}
 			>

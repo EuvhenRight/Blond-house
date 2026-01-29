@@ -61,7 +61,7 @@ function SocialIcon({ href, icon, ariaLabel }: SocialIconProps) {
 			className='group relative flex items-center justify-center p-2 sm:p-2 md:p-3 lg:p-4'
 			aria-label={ariaLabel}
 		>
-			<div className='h-10 w-10 sm:h-12 sm:w-12 md:h-12 md:w-12 lg:h-12 lg:w-12 xl:h-12 xl:w-12 shrink-0 text-gray-800 transition-all duration-300 group-hover:scale-110 group-hover:text-amber-800'>
+			<div className='h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 lg:h-12 lg:w-12 xl:h-12 xl:w-12 shrink-0 text-gray-800 transition-all duration-300 group-hover:scale-110 group-hover:text-amber-800'>
 				{icon}
 			</div>
 		</Link>
@@ -126,7 +126,6 @@ export default function HeroSection() {
 			const nextSectionRect = nextSection.getBoundingClientRect()
 			const viewportHeight = window.innerHeight
 
-			// Hide buttons when next section starts entering the viewport
 			// Show buttons when next section is below viewport (still in hero section)
 			if (nextSectionRect.top < viewportHeight) {
 				setShowButtons(false)
@@ -262,35 +261,28 @@ export default function HeroSection() {
 					</div>
 				</div>
 
-				{/* Book button - orange gradient, touch-friendly, mobile/tablet only */}
+				{/* Book button - orange gradient, mobile/tablet only */}
 				<Link
 					href='/book'
 					aria-label='Book an appointment'
 					tabIndex={showButtons && buttonsVisible ? 0 : -1}
-					className={`group book-btn-touch lg:hidden absolute right-8 bottom-60 z-30 flex items-center justify-center min-w-[56px] min-h-[56px] w-24 h-24 rounded-2xl overflow-hidden bg-linear-to-r from-amber-400 via-amber-500 to-amber-600 border border-amber-600/40 shadow-[0_8px_24px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.35)] transition-[opacity,transform,box-shadow] duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:scale-105 hover:shadow-[0_12px_32px_rgba(245,158,11,0.5)] active:scale-95 active:shadow-[0_4px_16px_rgba(245,158,11,0.35)] touch-manipulation select-none [-webkit-tap-highlight-color:transparent] ${
+					className={`group lg:hidden absolute right-8 bottom-60 z-30 flex items-center justify-center min-w-[56px] min-h-[48px] px-5 py-3 rounded-xl overflow-hidden bg-white/15 backdrop-blur-[20px] backdrop-saturate-180 border border-white/30 shadow-[0_8px_24px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.25)] transition-[opacity,transform,box-shadow] duration-300 ease-out outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent hover:bg-white/25 hover:shadow-[0_12px_32px_rgba(0,0,0,0.15),inset_0_1px_0_rgba(255,255,255,0.3)] active:scale-95 touch-manipulation select-none [-webkit-tap-highlight-color:transparent] ${
 						showButtons && buttonsVisible
 							? 'opacity-100 translate-y-0 pointer-events-auto'
 							: 'opacity-0 translate-y-full pointer-events-none'
 					}`}
+					style={{
+						WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+					}}
 				>
-					{/* Inner wrapper: pulse animation on own layer (avoids transition conflict on iOS) */}
+					{/* Inner highlight (static) */}
 					<span
-						className={`absolute inset-0 flex items-center justify-center rounded-2xl ${showButtons && buttonsVisible ? 'book-btn-pulse' : ''}`}
-					>
-						{/* Inner highlight */}
-						<span
-							className='absolute inset-0 rounded-2xl bg-linear-to-b from-white/25 via-transparent to-transparent pointer-events-none'
-							aria-hidden='true'
-						/>
-						{/* Shimmer – CSS class for reliable iOS (hero-book-button-shimmer has -webkit-animation) */}
-						<span
-							className='book-btn-shimmer hero-book-button-shimmer absolute inset-0 rounded-2xl bg-linear-to-r from-transparent via-white/35 to-transparent'
-							aria-hidden='true'
-						/>
-						{/* Book text */}
-						<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)] relative z-10 font-semibold text-md'>
-							BOOK NOW
-						</span>
+						className='absolute inset-0 rounded-xl bg-linear-to-b from-white/25 via-transparent to-transparent pointer-events-none'
+						aria-hidden='true'
+					/>
+					{/* Book text */}
+					<span className='text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] relative z-10 font-semibold text-md'>
+						BOOK NOW
 					</span>
 				</Link>
 
