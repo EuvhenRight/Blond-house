@@ -187,7 +187,7 @@ export default function HeroSection() {
 					}}
 				>
 					<Image
-						src={isMobile ? '/images/GirlMobile.png' : '/images/GoldGirl18.png'}
+						src='/images/GoldGirl18.png'
 						alt='Hair design studio in Amsterdam'
 						fill
 						priority
@@ -198,7 +198,7 @@ export default function HeroSection() {
 							objectFit: 'cover',
 							height: '100%',
 						}}
-						sizes='100vw'
+						sizes='(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw'
 					/>
 				</div>
 				{/* Overlay for better text readability */}
@@ -229,7 +229,7 @@ export default function HeroSection() {
 
 			{/* Content Container */}
 			<div className='relative z-10 h-full flex flex-col p-4 sm:p-6 md:p-8 lg:p-12'>
-				<div className='flex flex-col justify-between max-w-full sm:max-w-xl md:max-w-2xl mt-10 mb-4 sm:mt-16 md:mt-20'>
+				<div className='flex flex-col justify-between max-w-full sm:max-w-xl md:max-w-2xl mt-6 mb-4 sm:mt-10 md:mt-20'>
 					{/* Main Title - Customize with Tailwind classes below */}
 					<div className='mb-auto sm:mt-0'>
 						<h1 className='font-[title]! font-light! leading-[140%]! mb-4 sm:mb-6'>
