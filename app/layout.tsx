@@ -1,14 +1,11 @@
+import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import { JsonLd } from './components/JsonLd'
 import './globals.css'
-import {
-	OG_IMAGE_HEIGHT,
-	OG_IMAGE_WIDTH,
-	seo,
-} from './lib/seo'
+import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, seo } from './lib/seo'
 import { Providers } from './providers'
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -103,6 +100,7 @@ export default function RootLayout({
 					{children}
 					<Footer />
 				</Providers>
+				<Analytics />
 			</body>
 		</html>
 	)
