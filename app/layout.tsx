@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import Footer from './components/Footer'
 import Header from './components/Header'
 import { JsonLd } from './components/JsonLd'
+import { MetaPixel } from './components/MetaPixel'
 import './globals.css'
 import { OG_IMAGE_HEIGHT, OG_IMAGE_WIDTH, seo } from './lib/seo'
 import { Providers } from './providers'
@@ -94,6 +95,7 @@ export default function RootLayout({
 			<body
 				className={`${plusJakartaSans.variable} antialiased bg-linear-to-r from-amber-50 via-white to-amber-250 text-zinc-900 min-h-screen overflow-x-hidden`}
 			>
+				<MetaPixel />
 				<JsonLd />
 				<Providers>
 					<Header />
