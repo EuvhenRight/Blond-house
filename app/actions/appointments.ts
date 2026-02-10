@@ -87,7 +87,12 @@ export async function getAppointmentsByDateRange(
 		return []
 	}
 }
-
+/**
+ * Get available time slots for a given date and service duration
+ * @param date - The date to get available time slots for
+ * @param serviceDurationMinutes - The duration of the service in minutes
+ * @returns An array of available time slots
+ */
 export async function getAvailableSlots(
 	date: string,
 	serviceDurationMinutes?: number,
