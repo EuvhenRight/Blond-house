@@ -30,8 +30,8 @@ export const metadata: Metadata = {
 	description: seo.defaultDescription,
 	keywords: [...seo.keywords],
 	applicationName: seo.siteName,
-	authors: [{ name: 'Yuriy Pantel', url: seo.siteUrl }],
-	creator: 'Yuriy Pantel',
+	authors: [{ name: 'Hair Chief', url: seo.siteUrl }],
+	creator: 'Hair Chief',
 	publisher: 'Hair Studio',
 	formatDetection: {
 		email: false,

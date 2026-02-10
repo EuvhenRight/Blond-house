@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
 									? 'border-red-500 focus:ring-red-500'
 									: 'border-zinc-300'
 							}`}
-							placeholder='admin@blondhouse.com'
+							placeholder='admin@example.com'
 						/>
 						{fieldErrors.email && (
 							<p className='mt-1 text-sm text-red-600'>{fieldErrors.email}</p>

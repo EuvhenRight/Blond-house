@@ -4,7 +4,7 @@ import { seo } from '../lib/seo'
 export const metadata: Metadata = {
 	title: 'Privacy Policy',
 	description:
-		'Privacy policy for Hair Studio (Yuriy Pantel). How we collect, use, and protect your data.',
+		'Privacy policy for Hair Studio (Hair Chief). How we collect, use, and protect your data.',
 	robots: { index: true, follow: true },
 	alternates: {
 		canonical: `${seo.siteUrl}/privacy`,
@@ -12,12 +12,12 @@ export const metadata: Metadata = {
 	openGraph: {
 		url: `${seo.siteUrl}/privacy`,
 		title: 'Privacy Policy | Hair Studio',
-		description: 'Privacy policy for Hair Studio (Yuriy Pantel).',
+		description: 'Privacy policy for Hair Studio (Hair Chief).',
 	},
 	twitter: {
 		card: 'summary',
 		title: 'Privacy Policy | Hair Studio',
-		description: 'Privacy policy for Hair Studio (Yuriy Pantel).',
+		description: 'Privacy policy for Hair Studio (Hair Chief).',
 	},
 }
 

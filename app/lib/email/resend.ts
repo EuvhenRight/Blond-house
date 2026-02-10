@@ -4,12 +4,12 @@ import type { Appointment } from '../types'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 // Use verified domain + display name (helps deliverability and trust)
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@blondhouse.nl'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || ''
 const FROM_NAME = 'Hair Studio'
-const FROM = `${FROM_NAME} <${FROM_EMAIL}>`
+const FROM = FROM_EMAIL ? `${FROM_NAME} <${FROM_EMAIL}>` : FROM_NAME
 
 const STUDIO_ADDRESS = 'Warmoesstraat 155, floor 3, Amsterdam'
-const STUDIO_SITE = 'https://blondhouse.nl'
+const STUDIO_SITE = process.env.NEXT_PUBLIC_SITE_URL || ''
 
 // Shared email layout: professional, minimal spam triggers, physical address in footer
 function emailLayout(content: string, title: string) {
@@ -51,7 +51,7 @@ function emailLayout(content: string, title: string) {
 			</div>
 			<div class="footer">
 				<p><strong>Hair Studio</strong> · ${STUDIO_ADDRESS}</p>
-				<p><a href="${STUDIO_SITE}">blondhouse.nl</a> · <a href="mailto:${FROM_EMAIL}">${FROM_EMAIL}</a></p>
+				<p>${STUDIO_SITE ? `<a href="${STUDIO_SITE}">Website</a> · ` : ''}<a href="mailto:${FROM_EMAIL}">${FROM_EMAIL}</a></p>
 			</div>
 		</div>
 	</div>
@@ -217,7 +217,7 @@ export async function sendCancellationEmail(
 	try {
 		const recipient = isCustomer
 			? appointment.customerEmail!
-			: process.env.ADMIN_EMAIL_NOTIFICATION || 'admin@blondhouse.com'
+			: process.env.ADMIN_EMAIL_NOTIFICATION || ''
 		const subject = isCustomer
 			? 'Appointment cancelled – Hair Studio'
 			: `Appointment cancelled – ${appointment.customerName} – Hair Studio`

@@ -4,7 +4,7 @@ import { seo } from '../lib/seo'
 export const metadata: Metadata = {
 	title: 'Terms of Service',
 	description:
-		'Terms of service for Hair Studio (Yuriy Pantel). Booking, cancellation, and use of our hair design services.',
+		'Terms of service for Hair Studio (Hair Chief). Booking, cancellation, and use of our hair design services.',
 	robots: { index: true, follow: true },
 	alternates: {
 		canonical: `${seo.siteUrl}/terms`,
@@ -12,12 +12,12 @@ export const metadata: Metadata = {
 	openGraph: {
 		url: `${seo.siteUrl}/terms`,
 		title: 'Terms of Service | Hair Studio',
-		description: 'Terms of service for Hair Studio (Yuriy Pantel).',
+		description: 'Terms of service for Hair Studio (Hair Chief).',
 	},
 	twitter: {
 		card: 'summary',
 		title: 'Terms of Service | Hair Studio',
-		description: 'Terms of service for Hair Studio (Yuriy Pantel).',
+		description: 'Terms of service for Hair Studio (Hair Chief).',
 	},
 }
 

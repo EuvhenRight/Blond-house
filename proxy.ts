@@ -1,8 +1,16 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-const APEX_HOST = 'blondhouse.nl'
-const WWW_HOST = 'www.blondhouse.nl'
+function getDomains() {
+	const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || ''
+	try {
+		const hostname = new URL(siteUrl).hostname
+		return { apex: hostname, www: hostname ? `www.${hostname}` : '' }
+	} catch {
+		return { apex: '', www: '' }
+	}
+}
+const { apex: APEX_HOST, www: WWW_HOST } = getDomains()
 
 export async function proxy(request: NextRequest) {
 	const { pathname, search } = request.nextUrl

@@ -4,7 +4,7 @@
  */
 
 export const siteConfig = {
-	name: 'Yuriy Pantel',
+	name: 'Hair Chief',
 	tagline: 'Experience',
 	description: 'your beauty,',
 	description_2: 'naturally',

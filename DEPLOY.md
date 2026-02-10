@@ -1,6 +1,6 @@
-# Deploy to blondhouse.nl
+# Deploy to production
 
-Checklist to run this app in production at **https://blondhouse.nl**.
+Checklist to run this app in production at your domain (e.g. **https://your-domain.com**).
 
 ## 1. Build and run locally (smoke test)
 
@@ -15,93 +15,80 @@ Open http://localhost:3001 and test booking + admin.
 
 Use the template in **`env.example`**. Copy those keys into your host’s environment (e.g. Vercel).
 
-| Variable                   | Required | Notes                                                   |
-| -------------------------- | -------- | ------------------------------------------------------- |
-| `NEXT_PUBLIC_SITE_URL`     | Yes      | `https://blondhouse.nl`                                 |
-| `NEXTAUTH_URL`             | Yes      | `https://blondhouse.nl` (same as site URL)              |
-| `NEXTAUTH_SECRET`          | Yes      | e.g. `openssl rand -base64 32`                          |
-| `ADMIN_EMAIL`              | Yes      | Admin login email                                       |
-| `ADMIN_PASSWORD`           | Yes      | Admin login password                                    |
-| `NEXT_PUBLIC_FIREBASE_*`   | Yes      | From Firebase Console → Project settings                |
-| `RESEND_API_KEY`           | Yes      | For booking/notification emails                         |
-| `RESEND_FROM_EMAIL`        | Optional | Default `noreply@blondhouse.nl` – use a verified domain |
-| `ADMIN_EMAIL_NOTIFICATION` | Optional | Where to send admin notifications                       |
+| Variable                   | Required | Notes                                            |
+| -------------------------- | -------- | ------------------------------------------------ |
+| `NEXT_PUBLIC_SITE_URL`     | Yes      | Your production URL (e.g. `https://your-domain.com`) |
+| `NEXTAUTH_URL`             | Yes      | Same as site URL (apex, not www)                 |
+| `NEXTAUTH_SECRET`          | Yes      | e.g. `openssl rand -base64 32`                   |
+| `ADMIN_EMAIL`              | Yes      | Admin login email                                |
+| `ADMIN_PASSWORD`           | Yes      | Admin login password                             |
+| `NEXT_PUBLIC_FIREBASE_*`   | Yes      | From Firebase Console → Project settings         |
+| `RESEND_API_KEY`           | Yes      | For booking/notification emails                  |
+| `RESEND_FROM_EMAIL`        | Optional | Use a verified domain (e.g. `noreply@your-domain.com`) |
+| `ADMIN_EMAIL_NOTIFICATION` | Optional | Where to send admin notifications               |
 
-## 3. Domain (blondhouse.nl)
+## 3. Domain
 
-- **Preferred domain:** `blondhouse.nl` (apex).
-- **www:** The app redirects `www.blondhouse.nl` → `https://blondhouse.nl` in **middleware** (early, before anything else) to avoid redirect loops.
+- **Preferred:** Use your apex domain (e.g. `your-domain.com`).
+- **www:** The app redirects `www.your-domain.com` → apex in **middleware** (derived from `NEXT_PUBLIC_SITE_URL`) to avoid redirect loops.
 
 ### If you use Vercel
 
 1. Project → **Settings** → **Domains**.
-2. Add `blondhouse.nl` as primary and `www.blondhouse.nl`. Do **not** set “Redirect apex → www” or you’ll get “redirected too many times”.
+2. Add your apex domain as primary and the www variant. Do **not** set “Redirect apex → www” or you may get “redirected too many times”.
 3. Follow Vercel’s DNS instructions (A/CNAME for your registrar).
-4. In **Environment Variables**, set `NEXT_PUBLIC_SITE_URL=https://blondhouse.nl` and `NEXTAUTH_URL=https://blondhouse.nl` for **Production**.
+4. In **Environment Variables**, set `NEXT_PUBLIC_SITE_URL` and `NEXTAUTH_URL` to your production URL (e.g. `https://your-domain.com`) for **Production**.
 
 ### Fix “ERR_TOO_MANY_REDIRECTS” (apex ↔ www loop)
 
-If you see “blondhouse.nl redirected you too many times”, **Vercel is redirecting apex → www** while the app redirects www → apex. Fix it in Vercel:
+If you see “redirected you too many times”, **Vercel may be redirecting apex → www** while the app redirects www → apex. Fix it in Vercel:
 
 1. **Vercel Dashboard** → your project → **Settings** → **Domains**.
-2. You should see **blondhouse.nl** and **www.blondhouse.nl**. One of them is “Primary” or has a redirect.
-3. **Set the primary domain to `blondhouse.nl`** (apex).
-   - If there is a **“Redirect”** or **“Edit”** next to a domain, open it.
-   - For **www.blondhouse.nl**: choose **“Redirect to blondhouse.nl”** (or “Redirect to primary”).
-   - For **blondhouse.nl**: it must **not** redirect anywhere; it should be the primary.
-4. If you see **“Redirect apex (blondhouse.nl) to www”** or **“Make www the primary”**, **turn that off** or switch to “Redirect www to apex” / “blondhouse.nl is primary”.
-5. Save, wait a minute, then try https://blondhouse.nl again (ideally in an incognito window or after clearing cookies for blondhouse.nl).
+2. Set the **primary domain** to your apex (e.g. `your-domain.com`).
+3. For the **www** domain: choose **“Redirect to apex”** (or “Redirect to primary”).
+4. Ensure the apex domain does **not** redirect anywhere.
+5. Save, wait a minute, then try your site again (e.g. in an incognito window).
 
 ### If you use another host
 
-- Point DNS for `blondhouse.nl` (and optionally `www.blondhouse.nl`) to that host.
+- Point DNS for your domain (and optionally www) to that host.
 - Set the same env vars and ensure HTTPS is enabled.
 
 ## 4. Firebase
 
 1. **Firebase Console** → your project → **Authentication** → **Settings** → **Authorized domains**.
-2. Add `blondhouse.nl` and `www.blondhouse.nl` so auth and Firestore work on your domain.
+2. Add your production domain and www so auth and Firestore work.
 
 ## 5. Resend (email)
 
-- Verify the domain **blondhouse.nl** in Resend.
-- Use a from-address on that domain (e.g. `noreply@blondhouse.nl`) for `RESEND_FROM_EMAIL`.
+- Verify your sending domain in Resend.
+- Use a from-address on that domain for `RESEND_FROM_EMAIL`.
 
 ### Avoid emails going to spam (deliverability)
 
 1. **Verify your domain in Resend**
-   - Resend Dashboard → **Domains** → Add **blondhouse.nl**.
-   - Resend will show DNS records to add (SPF, DKIM). Add them at your DNS provider (e.g. GoDaddy, Cloudflare) for **blondhouse.nl**.
+   - Resend Dashboard → **Domains** → Add your domain.
+   - Add the DNS records Resend gives you (SPF, DKIM) at your DNS provider.
    - Wait until Resend shows the domain as **Verified**.
 
-2. **Add the DNS records Resend gives you**
-   - Typically: one **TXT** for SPF (e.g. `v=spf1 include:amazonses.com ~all`) and one or more **CNAME** for DKIM.
-   - Do **not** skip DKIM; it is the main signal that your mail is legitimate.
+2. **Optional: DMARC (recommended)**
+   - Add a TXT record at `_dmarc.your-domain.com` (monitoring: `v=DMARC1; p=none; rua=mailto:you@example.com`).
 
-3. **Optional: DMARC (recommended for better deliverability)**
-   - Add a TXT record at `_dmarc.blondhouse.nl`:
-   - Start with monitoring only: `v=DMARC1; p=none; rua=mailto:yuri.prodjhair@gmail.com`
-   - After a few weeks with no issues, you can move to `p=quarantine` or `p=reject`. See [Resend DMARC docs](https://resend.com/docs/dashboard/domains/dmarc).
-
-4. **Use a proper From name**
-   - The app sends as **BlondHouse Hair Studio &lt;noreply@blondhouse.nl&gt;** (no code change needed). A real business name in the From field helps inbox placement.
-
-5. **Warm up and reputation**
-   - Send a few test emails to yourself first. Avoid sending large volumes immediately; gradual volume helps build reputation.
+3. **Use a proper From name**
+   - Set `RESEND_FROM_EMAIL` to an address on your verified domain. A real business name in the From field helps deliverability.
 
 ## 6. After deploy
 
-- Open https://blondhouse.nl and test:
-  - Home, Services, Book flow, Privacy/Terms.
-- Open https://blondhouse.nl/admin/login and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+- Open your production URL and test: Home, Services, Book flow, Privacy/Terms.
+- Open `/admin/login` and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 - Run through: create/edit appointment, availability, analytics.
 
 ## Summary
 
-| Step     | Action                                                                          |
-| -------- | ------------------------------------------------------------------------------- |
-| Env      | Set all variables from `env.example` in your host (production = blondhouse.nl). |
-| Domain   | Add blondhouse.nl (and www) in your host’s domain settings and DNS.             |
-| Firebase | Add blondhouse.nl (and www) to Auth authorized domains.                         |
-| Resend   | Verify blondhouse.nl and use it for `RESEND_FROM_EMAIL`.                        |
-| Build    | `npm run build` (or use your host’s build command).                             |
+| Step     | Action                                                                 |
+| -------- | ---------------------------------------------------------------------- |
+| Env      | Set all variables from `env.example` in your host for production.      |
+| Domain   | Add your domain (and www) in your host’s domain settings and DNS.      |
+| Firebase | Add your domain (and www) to Auth authorized domains.                  |
+| Resend   | Verify your domain and use it for `RESEND_FROM_EMAIL`.                 |
+| Build    | `npm run build` (or use your host’s build command).                    |

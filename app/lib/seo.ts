@@ -1,5 +1,5 @@
 /**
- * Central SEO configuration for Hair Studio (blondhouse.nl).
+ * Central SEO configuration for Hair Studio.
  * Used by layout metadata and anywhere we need canonical titles/descriptions.
  *
  * Social share image: Salon.png (studio interior) is used for Open Graph and Twitter cards.
@@ -7,7 +7,7 @@
  */
 
 const siteUrl =
-	process.env.NEXT_PUBLIC_SITE_URL || 'https://blondhouse.nl'
+	process.env.NEXT_PUBLIC_SITE_URL || ''
 
 /** Recommended OG/Twitter image size used by Facebook, LinkedIn, WhatsApp, Telegram, Twitter */
 export const OG_IMAGE_WIDTH = 1200
@@ -29,25 +29,25 @@ export function getDefaultImageUrl(): string {
 
 export const seo = {
 	siteUrl,
-	siteName: 'Hair Studio | Yuriy Pantel',
+	siteName: 'Hair Studio | Hair Chief',
 	defaultTitle: 'Hair Studio Amsterdam | Professional Hair Stylist',
 	defaultDescription:
-		'Hair Studio – professional hair design and blonde hair styling by Yuriy Pantel in Amsterdam. Book your appointment online.',
+		'Hair Studio – professional hair design and blonde hair styling by Hair Chief in Amsterdam. Book your appointment online.',
 	defaultImagePath: getDefaultImagePath(),
 	defaultImageUrl: getDefaultImageUrl(),
 	defaultImageAlt:
-		'Hair Studio – professional hair design by Yuriy Pantel in Amsterdam',
+		'Hair Studio – professional hair design by Hair Chief in Amsterdam',
 	keywords: [
 		'Hair Studio',
 		'hair design',
 		'Amsterdam',
 		'hair stylist',
 		'hair salon',
-		'Yuriy Pantel',
+		'Hair Chief',
 		'blonde hair',
 		'professional hair styling',
 	],
 	locale: 'en_US',
-	twitterHandle: '', // e.g. '@blondhouse' if you have one
+	twitterHandle: '',
 	facebookAppId: '', // optional, for Facebook Insights
 } as const
