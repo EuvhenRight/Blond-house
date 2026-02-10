@@ -10,11 +10,11 @@ export const siteConfig = {
 	description_2: 'naturally',
 	description_3: 'Flow.',
 	location: 'Amsterdam',
-	address: 'Warmoesstraat 155, floor 3, Amsterdam',
-	email: 'yuri.prodjhair@gmail.com',
-	phone: '+31620991336',
-	whatsapp: 'https://wa.me/31620991336',
-	googleMaps: 'https://maps.google.com/?q=Warmoesstraat+155,+Amsterdam',
+	address: '123 Example Street, floor 1, Amsterdam',
+	email: 'contact@example.com',
+	phone: '+31201234567',
+	whatsapp: 'https://wa.me/31201234567',
+	googleMaps: 'https://maps.google.com/?q=Example+Street+123,+Amsterdam',
 } as const
 
 export const navigation = {

@@ -8,7 +8,7 @@ const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || ''
 const FROM_NAME = 'Hair Studio'
 const FROM = FROM_EMAIL ? `${FROM_NAME} <${FROM_EMAIL}>` : FROM_NAME
 
-const STUDIO_ADDRESS = 'Warmoesstraat 155, floor 3, Amsterdam'
+const STUDIO_ADDRESS = '123 Example Street, floor 1, Amsterdam'
 const STUDIO_SITE = process.env.NEXT_PUBLIC_SITE_URL || ''
 
 // Shared email layout: professional, minimal spam triggers, physical address in footer
@@ -106,7 +106,7 @@ export async function sendBookingConfirmationEmail(appointment: Appointment) {
 export async function sendAdminNotificationEmail(appointment: Appointment) {
 	try {
 		const adminEmail =
-			process.env.ADMIN_EMAIL_NOTIFICATION || 'yuri.prodjhair@gmail.com'
+			process.env.ADMIN_EMAIL_NOTIFICATION || 'admin@example.com'
 
 		const dateFormatted = new Date(appointment.date).toLocaleDateString(
 			'en-US',

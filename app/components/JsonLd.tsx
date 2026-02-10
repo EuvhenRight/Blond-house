@@ -15,7 +15,7 @@ const localBusinessJsonLd = {
 	image: seo.defaultImageUrl,
 	address: {
 		'@type': 'PostalAddress',
-		streetAddress: 'Warmoesstraat 155, floor 3',
+		streetAddress: '123 Example Street, floor 1',
 		addressLocality: siteConfig.location,
 		addressCountry: 'NL',
 	},
