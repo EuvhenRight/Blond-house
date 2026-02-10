@@ -13,7 +13,7 @@
 
 A modern, responsive web app that combines a **portfolio** for a hair stylist with a full **booking system**: service selection, calendar, time slots, email confirmations, and an admin dashboard for managing appointments.
 
-- **Live site:** set via `NEXT_PUBLIC_SITE_URL`
+- **Live site:** [blond-house.vercel.app](https://blond-house.vercel.app)
 - **Stack:** Next.js (App Router), React 19, TypeScript, Tailwind CSS 4, Firebase (Firestore + Auth), NextAuth, Resend, FullCalendar
 
 ---

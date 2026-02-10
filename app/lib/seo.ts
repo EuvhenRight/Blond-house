@@ -10,7 +10,7 @@
  * Set NEXT_PUBLIC_SITE_URL in Vercel (or .env) for correct production URLs.
  */
 const siteUrl =
-	process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://localhost:3000'
+	process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://blond-house.vercel.app'
 
 /** Recommended OG/Twitter image size used by Facebook, LinkedIn, WhatsApp, Telegram, Twitter */
 export const OG_IMAGE_WIDTH = 1200
