@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-	...(seo.siteUrl && { metadataBase: new URL(seo.siteUrl) }),
+	metadataBase: new URL(seo.siteUrl),
 	title: {
 		default: seo.defaultTitle,
 		template: `%s | ${seo.siteName}`,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 	description: seo.defaultDescription,
 	keywords: [...seo.keywords],
 	applicationName: seo.siteName,
-	authors: [{ name: 'Hair Chief', ...(seo.siteUrl && { url: seo.siteUrl }) }],
+	authors: [{ name: 'Hair Chief', url: seo.siteUrl }],
 	creator: 'Hair Chief',
 	publisher: 'Hair Studio',
 	formatDetection: {
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 	openGraph: {
 		type: 'website',
 		locale: seo.locale,
-		...(seo.siteUrl && { url: seo.siteUrl }),
+		url: seo.siteUrl,
 		siteName: seo.siteName,
 		title: seo.defaultTitle,
 		description: seo.defaultDescription,
@@ -76,11 +76,9 @@ export const metadata: Metadata = {
 		],
 		...(seo.twitterHandle ? { creator: seo.twitterHandle } : {}),
 	},
-	...(seo.siteUrl && {
-		alternates: {
-			canonical: seo.siteUrl,
-		},
-	}),
+	alternates: {
+		canonical: seo.siteUrl,
+	},
 	icons: {
 		icon: '/favicon.ico',
 		apple: '/apple-icon.png',

@@ -4,10 +4,13 @@
  *
  * Social share image: Salon.png (studio interior) is used for Open Graph and Twitter cards.
  * For best display on socials, use 1200×630 px if you replace it.
+ *
+ * When NEXT_PUBLIC_SITE_URL is not set (e.g. during build), we use a placeholder so that
+ * new URL(siteUrl) and other URL-dependent code never receive an empty string (Invalid URL).
+ * Set NEXT_PUBLIC_SITE_URL in Vercel (or .env) for correct production URLs.
  */
-
 const siteUrl =
-	process.env.NEXT_PUBLIC_SITE_URL || ''
+	process.env.NEXT_PUBLIC_SITE_URL?.trim() || 'https://localhost:3000'
 
 /** Recommended OG/Twitter image size used by Facebook, LinkedIn, WhatsApp, Telegram, Twitter */
 export const OG_IMAGE_WIDTH = 1200
