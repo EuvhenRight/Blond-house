@@ -13,8 +13,8 @@
 
 <br/>
 
-<a href="https://blond-house.vercel.app">
-  <img src="public/images/blondhouse.png" width="820" alt="Hair Chief — landing" />
+<a href="https://blond-house.vercel.app/">
+  <img src="public/images/Screenshot-home.png" width="820" alt="Hair Chief — landing" />
 </a>
 
 <sub>Mobile-first portfolio · Public booking with real-time availability · Admin dashboard with FullCalendar</sub>
@@ -44,9 +44,19 @@ Built solo as a paid client project for a working stylist in Amsterdam. I handle
 
 | | |
 | :--- | :--- |
-| [![Landing](public/images/blondhouse.png)](public/images/blondhouse.png) | [![Salon](public/images/Salon.png)](public/images/Salon.png) |
+| [![Booking flow](public/images/Screenshot-booking.png)](public/images/Screenshot-booking.png) | [![Admin dashboard](public/images/Screenshot-admin.png)](public/images/Screenshot-admin.png) |
+| [![Services & pricing](public/images/Screenshot-price.png)](public/images/Screenshot-price.png) | [![Home](public/images/Screenshot-home.png)](public/images/Screenshot-home.png) |
 
-> TODO — replace with dedicated landing and booking-flow captures.
+## Design & Portfolio Assets
+
+Brand and hero imagery used across the site.
+
+| | | | |
+| :---: | :---: | :---: | :---: |
+| [![Logo](public/images/newLogo.png)](public/images/newLogo.png) | [![Wordmark](public/images/blondhouse.png)](public/images/blondhouse.png) | [![Amsterdam](public/images/amsterdam_2.png)](public/images/amsterdam_2.png) | [![Brand background](public/images/BH-BG.png)](public/images/BH-BG.png) |
+| [![Home background](public/images/BG.png)](public/images/BG.png) | [![Services background](public/images/BG_Services.png)](public/images/BG_Services.png) | [![Salon](public/images/Salon.png)](public/images/Salon.png) | [![Mobile hero](public/images/GirlMobile.png)](public/images/GirlMobile.png) |
+| [![Gold hero](public/images/GoldGirl18.png)](public/images/GoldGirl18.png) | [![Portfolio 1](public/images/IMG_2106.jpg)](public/images/IMG_2106.jpg) | [![Portfolio 2](public/images/IMG_2112.jpeg)](public/images/IMG_2112.jpeg) | [![Portfolio 3](public/images/IMG_2117.jpg)](public/images/IMG_2117.jpg) |
+| [![Portfolio 4](public/images/IMG_2120.jpg)](public/images/IMG_2120.jpg) | [![Portfolio 5](public/images/IMG_2122.jpg)](public/images/IMG_2122.jpg) | [![Portfolio 6](public/images/IMG_2162.jpg)](public/images/IMG_2162.jpg) | [![Portfolio 7](public/images/IMG_2164.jpg)](public/images/IMG_2164.jpg) |
 
 ## Tech Stack
 
