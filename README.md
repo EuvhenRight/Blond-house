@@ -19,6 +19,10 @@
 
 <sub>Mobile-first portfolio · Public booking with real-time availability · Admin dashboard with FullCalendar</sub>
 
+<br/><br/>
+
+**[Live preview → blond-house.vercel.app](https://blond-house.vercel.app/)**
+
 </div>
 
 ---
